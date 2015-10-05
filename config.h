@@ -14,10 +14,22 @@
 /* #undef EXAFMM_SINGLE */
 
 /* Define to enable AVX optimizations. */
-#define HAVE_AVX 1
+/* #undef HAVE_AVX */
+
+/* Define to 1 if you have the <inttypes.h> header file. */
+/* #undef HAVE_INTTYPES_H */
+
+/* Define to 1 if you have the <memory.h> header file. */
+/* #undef HAVE_MEMORY_H */
 
 /* Define if you have the MPI library. */
-#define HAVE_MPI 1
+/* #undef HAVE_MPI */
+
+/* Define to 1 if you have the <mpif.h> header file. */
+/* #undef HAVE_MPIF_H */
+
+/* Define to 1 if you have the <mpi.h> header file. */
+/* #undef HAVE_MPI_H */
 
 /* Define to enable ARM NEON optimizations. */
 /* #undef HAVE_NEON */
@@ -27,6 +39,27 @@
 
 /* Define to enable SSE/SSE3 optimizations. */
 /* #undef HAVE_SSE3 */
+
+/* Define to 1 if you have the <stdint.h> header file. */
+/* #undef HAVE_STDINT_H */
+
+/* Define to 1 if you have the <stdlib.h> header file. */
+/* #undef HAVE_STDLIB_H */
+
+/* Define to 1 if you have the <strings.h> header file. */
+/* #undef HAVE_STRINGS_H */
+
+/* Define to 1 if you have the <string.h> header file. */
+/* #undef HAVE_STRING_H */
+
+/* Define to 1 if you have the <sys/stat.h> header file. */
+/* #undef HAVE_SYS_STAT_H */
+
+/* Define to 1 if you have the <sys/types.h> header file. */
+/* #undef HAVE_SYS_TYPES_H */
+
+/* Define to 1 if you have the <unistd.h> header file. */
+/* #undef HAVE_UNISTD_H */
 
 /* Name of package */
 #define PACKAGE "exafmm"
@@ -48,6 +81,9 @@
 
 /* Define to the version of this package. */
 #define PACKAGE_VERSION "1.0"
+
+/* Define to 1 if you have the ANSI C header files. */
+/* #undef STDC_HEADERS */
 
 /* Enable DAG recorder. */
 /* #undef USE_DAG */
@@ -80,4 +116,4 @@
 /* #undef WITH_QTHREAD */
 
 /* Use Intel TBB */
-#define WITH_TBB 1
+/* #undef WITH_TBB */
