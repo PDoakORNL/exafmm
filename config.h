@@ -2,7 +2,7 @@
 /* config.h.in.  Generated from configure.ac by autoheader.  */
 
 /* Enable assertion. */
-#define ASSERT 1
+/* #undef ASSERT */
 
 /* Count number of M2L and P2P kernel calls. */
 /* #undef COUNT_KERNEL */
@@ -14,7 +14,7 @@
 /* #undef DEBUG */
 
 /* Define to compile in single precision. */
-#define EXAFMM_SINGLE 1
+/* #undef EXAFMM_SINGLE */
 
 /* Define to enable AVX optimizations. */
 /* #undef HAVE_AVX */

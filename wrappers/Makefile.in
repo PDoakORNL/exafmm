@@ -149,15 +149,10 @@ host_triplet = @host@
 # Count interaction list per cell
 @COUNT_LIST_TRUE@am__append_20 = -DCOUNT_LIST
 @ASSERT_TRUE@am__append_21 = -DASSERT
-<<<<<<< HEAD
-bin_PROGRAMS = petiga$(EXEEXT) gromacs$(EXEEXT)
-=======
 
 #AM_CXXFLAGS += -fsanitize=address -Wconversion -Wundef
 @DEBUG_TRUE@am__append_22 = -ftrapv -O0 -Wall -Wextra -Winit-self -Wshadow -Wuninitialized -Wunreachable-code
-bin_PROGRAMS = petiga$(EXEEXT) gromacs$(EXEEXT) charmm$(EXEEXT) \
-	charmm2$(EXEEXT)
->>>>>>> master
+bin_PROGRAMS = petiga$(EXEEXT) gromacs$(EXEEXT)
 subdir = wrappers
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/m4/acx_mpi.m4 \
