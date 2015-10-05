@@ -46,17 +46,19 @@ extern "C" void FMM_Init(int images, int threads, bool verbose) {
   treeMPI = new TreeMPI(baseMPI->mpirank, baseMPI->mpisize, images);
   upDownPass = new UpDownPass(theta, useRmax, useRopt);
 
-  args->theta = theta;
   args->ncrit = ncrit;
-  args->nspawn = nspawn;
-  args->images = images;
-  args->threads = threads;
-  args->useRmax = useRmax;
-  args->useRopt = useRopt;
-  args->mutual = 0;
-  args->verbose = verbose;
   args->distribution = "external";
-  args->verbose &= baseMPI->mpirank == 0;
+  args->dual = 1;
+  args->graft = 1;
+  args->images = images;
+  args->mutual = 0;
+  args->numBodies = 0;
+  args->useRopt = useRopt;
+  args->nspawn = nspawn;
+  args->theta = theta;
+  args->threads = threads;
+  args->verbose = verbose & (baseMPI->mpirank == 0);
+  args->useRmax = useRmax;
   logger::verbose = args->verbose;
   logger::printTitle("Initial Parameters");
   args->print(logger::stringLength, P);
@@ -158,7 +160,7 @@ extern "C" void FMM_Coulomb(int n, int * index, float * x, float * q, float * p,
   treeMPI->commCells();
   traversal->initListCount(cells);
   traversal->initWeight(cells);
-  traversal->dualTreeTraversal(cells, cells, cycle, args->mutual);
+  traversal->traverse(cells, cells, cycle, args->dual, args->mutual);
 #if COUNT_LIST
   traversal->writeList(cells, baseMPI->mpirank);
 #endif
@@ -168,11 +170,11 @@ extern "C" void FMM_Coulomb(int n, int * index, float * x, float * q, float * p,
     Bodies gbodies = treeMPI->root2body();
     jcells = globalTree->buildTree(gbodies, buffer, globalBounds);
     treeMPI->attachRoot(jcells);
-    traversal->dualTreeTraversal(cells, jcells, cycle, false);
+    traversal->traverse(cells, jcells, cycle, args->dual, false);
   } else {
     for (int irank=0; irank<baseMPI->mpisize; irank++) {
       treeMPI->getLET(jcells, (baseMPI->mpirank+irank)%baseMPI->mpisize);
-      traversal->dualTreeTraversal(cells, jcells, cycle, false);
+      traversal->traverse(cells, jcells, cycle, args->dual, false);
     }
   }
   upDownPass->downwardPass(cells);

@@ -1,8 +1,9 @@
 -- Immediate --
-Multilevel Helmholtz debug
-Fix without TBB
-SIMD for Helmholtz P2P
+LBT mpi
 Have only one P2P
+SIMD for Helmholtz P2P
+Helmholtz DTT debug
+Fix without TBB
 periodic B.C. in list based traversal
 detect f90 and mpi fortran compiler
 logger.h split to print.h
@@ -50,7 +51,6 @@ Cartesian vs. Spherical (optimized)
 ORB vs. HOT
 
 -- Debugging tips --
---enable-debug mode
 Write the kind of code where standard gcc can catch the bug, exceptions, assertions
 Add assertions and keep them there
 Shift bodies

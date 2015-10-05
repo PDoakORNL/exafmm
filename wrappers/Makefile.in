@@ -149,7 +149,15 @@ host_triplet = @host@
 # Count interaction list per cell
 @COUNT_LIST_TRUE@am__append_20 = -DCOUNT_LIST
 @ASSERT_TRUE@am__append_21 = -DASSERT
+<<<<<<< HEAD
 bin_PROGRAMS = petiga$(EXEEXT) gromacs$(EXEEXT)
+=======
+
+#AM_CXXFLAGS += -fsanitize=address -Wconversion -Wundef
+@DEBUG_TRUE@am__append_22 = -ftrapv -O0 -Wall -Wextra -Winit-self -Wshadow -Wuninitialized -Wunreachable-code
+bin_PROGRAMS = petiga$(EXEEXT) gromacs$(EXEEXT) charmm$(EXEEXT) \
+	charmm2$(EXEEXT)
+>>>>>>> master
 subdir = wrappers
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/m4/acx_mpi.m4 \
@@ -424,7 +432,7 @@ top_srcdir = @top_srcdir@
 
 ### Base flags
 AM_CXXFLAGS = $(am__append_2) $(am__append_9) $(am__append_10) \
-	$(am__append_11)
+	$(am__append_11) $(am__append_22)
 AM_CPPFLAGS = -I../include -I../uniform $(am__append_1) \
 	$(am__append_7) $(am__append_8) $(am__append_12) \
 	$(am__append_13) $(am__append_14) $(am__append_16) \
@@ -1079,6 +1087,15 @@ save:
 # charmm2_SOURCES = test_charmm.f90
 # charmm2_CPPFLAGS = $(AM_CPPFLAGS)
 # charmm2_LDADD = libcharmm2.a
+
+run_charmm: charmm
+	./$< water_32.fmm water.out 0
+run_charmm2: charmm2
+	./$< water_32.fmm water.out 0
+run_gromacs: gromacs
+	$(MPIRUN) -n 2 ./$<
+run_petiga: petiga
+	$(MPIRUN) -n 2 ./$<
 
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.
