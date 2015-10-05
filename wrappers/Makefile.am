@@ -10,19 +10,19 @@ libcharmm_a_CPPFLAGS = $(AM_CPPFLAGS) -DLaplace -DSpherical -DEXPANSION=9
 libcharmm2_a_SOURCES = charmm2.cxx ../kernels/LaplaceSphericalCPU.cxx ../kernels/LaplaceP2PCPU.cxx
 libcharmm2_a_CPPFLAGS = $(AM_CPPFLAGS) -DLaplace -DSpherical -DEXPANSION=9
 
-bin_PROGRAMS = petiga gromacs charmm charmm2
+bin_PROGRAMS = petiga gromacs #charmm charmm2
 petiga_SOURCES = test_petiga.cxx
 petiga_CPPFLAGS = $(AM_CPPFLAGS)
 petiga_LDADD = libpetiga.a
 gromacs_SOURCES = test_gromacs.cxx
 gromacs_CPPFLAGS = $(AM_CPPFLAGS)
 gromacs_LDADD = libgromacs.a
-charmm_SOURCES = test_charmm.f90
-charmm_CPPFLAGS = $(AM_CPPFLAGS)
-charmm_LDADD = libcharmm.a
-charmm2_SOURCES = test_charmm.f90
-charmm2_CPPFLAGS = $(AM_CPPFLAGS)
-charmm2_LDADD = libcharmm2.a
+# charmm_SOURCES = test_charmm.f90
+# charmm_CPPFLAGS = $(AM_CPPFLAGS)
+# charmm_LDADD = libcharmm.a
+# charmm2_SOURCES = test_charmm.f90
+# charmm2_CPPFLAGS = $(AM_CPPFLAGS)
+# charmm2_LDADD = libcharmm2.a
 
 run_charmm: charmm
 	./$< water_32.fmm water.out 0

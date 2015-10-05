@@ -152,8 +152,7 @@ host_triplet = @host@
 
 #AM_CXXFLAGS += -fsanitize=address -Wconversion -Wundef
 @DEBUG_TRUE@am__append_22 = -ftrapv -O0 -Wall -Wextra -Winit-self -Wshadow -Wuninitialized -Wunreachable-code
-bin_PROGRAMS = petiga$(EXEEXT) gromacs$(EXEEXT) charmm$(EXEEXT) \
-	charmm2$(EXEEXT)
+bin_PROGRAMS = petiga$(EXEEXT) gromacs$(EXEEXT)
 subdir = wrappers
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/m4/acx_mpi.m4 \
@@ -201,7 +200,6 @@ am__uninstall_files_from_dir = { \
   }
 am__installdirs = "$(DESTDIR)$(libdir)" "$(DESTDIR)$(bindir)"
 LIBRARIES = $(lib_LIBRARIES)
-ARFLAGS = cru
 AM_V_AR = $(am__v_AR_@AM_V@)
 am__v_AR_ = $(am__v_AR_@AM_DEFAULT_V@)
 am__v_AR_0 = @echo "  AR      " $@;
@@ -232,12 +230,6 @@ am_libpetiga_a_OBJECTS = libpetiga_a-petiga.$(OBJEXT) \
 	../kernels/libpetiga_a-LaplaceP2PCPU.$(OBJEXT)
 libpetiga_a_OBJECTS = $(am_libpetiga_a_OBJECTS)
 PROGRAMS = $(bin_PROGRAMS)
-am_charmm_OBJECTS = test_charmm.$(OBJEXT)
-charmm_OBJECTS = $(am_charmm_OBJECTS)
-charmm_DEPENDENCIES = libcharmm.a
-am_charmm2_OBJECTS = test_charmm.$(OBJEXT)
-charmm2_OBJECTS = $(am_charmm2_OBJECTS)
-charmm2_DEPENDENCIES = libcharmm2.a
 am_gromacs_OBJECTS = gromacs-test_gromacs.$(OBJEXT)
 gromacs_OBJECTS = $(am_gromacs_OBJECTS)
 gromacs_DEPENDENCIES = libgromacs.a
@@ -277,38 +269,12 @@ AM_V_CXXLD = $(am__v_CXXLD_@AM_V@)
 am__v_CXXLD_ = $(am__v_CXXLD_@AM_DEFAULT_V@)
 am__v_CXXLD_0 = @echo "  CXXLD   " $@;
 am__v_CXXLD_1 = 
-FCCOMPILE = $(FC) $(AM_FCFLAGS) $(FCFLAGS)
-AM_V_FC = $(am__v_FC_@AM_V@)
-am__v_FC_ = $(am__v_FC_@AM_DEFAULT_V@)
-am__v_FC_0 = @echo "  FC      " $@;
-am__v_FC_1 = 
-FCLD = $(FC)
-FCLINK = $(FCLD) $(AM_FCFLAGS) $(FCFLAGS) $(AM_LDFLAGS) $(LDFLAGS) -o \
-	$@
-AM_V_FCLD = $(am__v_FCLD_@AM_V@)
-am__v_FCLD_ = $(am__v_FCLD_@AM_DEFAULT_V@)
-am__v_FCLD_0 = @echo "  FCLD    " $@;
-am__v_FCLD_1 = 
-COMPILE = $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) \
-	$(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS)
-AM_V_CC = $(am__v_CC_@AM_V@)
-am__v_CC_ = $(am__v_CC_@AM_DEFAULT_V@)
-am__v_CC_0 = @echo "  CC      " $@;
-am__v_CC_1 = 
-CCLD = $(CC)
-LINK = $(CCLD) $(AM_CFLAGS) $(CFLAGS) $(AM_LDFLAGS) $(LDFLAGS) -o $@
-AM_V_CCLD = $(am__v_CCLD_@AM_V@)
-am__v_CCLD_ = $(am__v_CCLD_@AM_DEFAULT_V@)
-am__v_CCLD_0 = @echo "  CCLD    " $@;
-am__v_CCLD_1 = 
 SOURCES = $(libcharmm_a_SOURCES) $(libcharmm2_a_SOURCES) \
 	$(libgromacs_a_SOURCES) $(libpetiga_a_SOURCES) \
-	$(charmm_SOURCES) $(charmm2_SOURCES) $(gromacs_SOURCES) \
-	$(petiga_SOURCES)
+	$(gromacs_SOURCES) $(petiga_SOURCES)
 DIST_SOURCES = $(libcharmm_a_SOURCES) $(libcharmm2_a_SOURCES) \
 	$(libgromacs_a_SOURCES) $(libpetiga_a_SOURCES) \
-	$(charmm_SOURCES) $(charmm2_SOURCES) $(gromacs_SOURCES) \
-	$(petiga_SOURCES)
+	$(gromacs_SOURCES) $(petiga_SOURCES)
 am__can_run_installinfo = \
   case $$AM_UPDATE_INFO_DIR in \
     n|no|NO) false;; \
@@ -340,6 +306,7 @@ ACLOCAL = @ACLOCAL@
 AMTAR = @AMTAR@
 AM_DEFAULT_VERBOSITY = @AM_DEFAULT_VERBOSITY@
 AR = @AR@
+ARFLAGS = @ARFLAGS@
 AUTOCONF = @AUTOCONF@
 AUTOHEADER = @AUTOHEADER@
 AUTOMAKE = @AUTOMAKE@
@@ -348,6 +315,7 @@ AWK = @AWK@
 CC = @CC@
 CCDEPMODE = @CCDEPMODE@
 CFLAGS = @CFLAGS@
+CPP = @CPP@
 CPPFLAGS = @CPPFLAGS@
 CXX = @CXX@
 CXXDEPMODE = @CXXDEPMODE@
@@ -358,11 +326,13 @@ DEPDIR = @DEPDIR@
 ECHO_C = @ECHO_C@
 ECHO_N = @ECHO_N@
 ECHO_T = @ECHO_T@
+EGREP = @EGREP@
 EXEEXT = @EXEEXT@
 F77 = @F77@
 FC = @FC@
 FCFLAGS = @FCFLAGS@
 FFLAGS = @FFLAGS@
+GREP = @GREP@
 INSTALL = @INSTALL@
 INSTALL_DATA = @INSTALL_DATA@
 INSTALL_PROGRAM = @INSTALL_PROGRAM@
@@ -380,6 +350,7 @@ MPICXX = @MPICXX@
 MPIF77 = @MPIF77@
 MPILIBS = @MPILIBS@
 MPIRUN = @MPIRUN@
+MPI_INCLUDES = @MPI_INCLUDES@
 NEON_CXXFLAGS = @NEON_CXXFLAGS@
 OBJEXT = @OBJEXT@
 OPENMP_CFLAGS = @OPENMP_CFLAGS@
@@ -478,16 +449,10 @@ petiga_LDADD = libpetiga.a
 gromacs_SOURCES = test_gromacs.cxx
 gromacs_CPPFLAGS = $(AM_CPPFLAGS)
 gromacs_LDADD = libgromacs.a
-charmm_SOURCES = test_charmm.f90
-charmm_CPPFLAGS = $(AM_CPPFLAGS)
-charmm_LDADD = libcharmm.a
-charmm2_SOURCES = test_charmm.f90
-charmm2_CPPFLAGS = $(AM_CPPFLAGS)
-charmm2_LDADD = libcharmm2.a
 all: all-am
 
 .SUFFIXES:
-.SUFFIXES: .cxx .f90 .o .obj
+.SUFFIXES: .cxx .o .obj
 $(srcdir)/Makefile.in:  $(srcdir)/Makefile.am $(srcdir)/../Makefile.am.include $(am__configure_deps)
 	@for dep in $?; do \
 	  case '$(am__configure_deps)' in \
@@ -641,14 +606,6 @@ uninstall-binPROGRAMS:
 
 clean-binPROGRAMS:
 	-test -z "$(bin_PROGRAMS)" || rm -f $(bin_PROGRAMS)
-
-charmm$(EXEEXT): $(charmm_OBJECTS) $(charmm_DEPENDENCIES) $(EXTRA_charmm_DEPENDENCIES) 
-	@rm -f charmm$(EXEEXT)
-	$(AM_V_FCLD)$(FCLINK) $(charmm_OBJECTS) $(charmm_LDADD) $(LIBS)
-
-charmm2$(EXEEXT): $(charmm2_OBJECTS) $(charmm2_DEPENDENCIES) $(EXTRA_charmm2_DEPENDENCIES) 
-	@rm -f charmm2$(EXEEXT)
-	$(AM_V_FCLD)$(FCLINK) $(charmm2_OBJECTS) $(charmm2_LDADD) $(LIBS)
 
 gromacs$(EXEEXT): $(gromacs_OBJECTS) $(gromacs_DEPENDENCIES) $(EXTRA_gromacs_DEPENDENCIES) 
 	@rm -f gromacs$(EXEEXT)
@@ -892,12 +849,6 @@ petiga-test_petiga.obj: test_petiga.cxx
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(petiga_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o petiga-test_petiga.obj `if test -f 'test_petiga.cxx'; then $(CYGPATH_W) 'test_petiga.cxx'; else $(CYGPATH_W) '$(srcdir)/test_petiga.cxx'; fi`
 
-.f90.o:
-	$(AM_V_FC)$(FCCOMPILE) -c -o $@ $<
-
-.f90.obj:
-	$(AM_V_FC)$(FCCOMPILE) -c -o $@ `$(CYGPATH_W) '$<'`
-
 ID: $(am__tagged_files)
 	$(am__define_uniq_tagged_files); mkid -fID $$unique
 tags: tags-am
@@ -1125,6 +1076,12 @@ revert:
 	@make -C .. revert
 save:
 	@make -C .. save
+# charmm_SOURCES = test_charmm.f90
+# charmm_CPPFLAGS = $(AM_CPPFLAGS)
+# charmm_LDADD = libcharmm.a
+# charmm2_SOURCES = test_charmm.f90
+# charmm2_CPPFLAGS = $(AM_CPPFLAGS)
+# charmm2_LDADD = libcharmm2.a
 
 run_charmm: charmm
 	./$< water_32.fmm water.out 0

@@ -1,4 +1,8 @@
 AC_INIT([exaFMM], [1.0])
+AC_SUBST(ARFLAGS)
+AC_ARG_VAR(ARFLAGS, "flags to ar, essential on OSX")
+AC_SUBST(MPI_INCLUDES)
+AC_ARG_VAR(MPI_INCLUDES, "additional include directories for mpi")
 AC_CONFIG_AUX_DIR([build-aux])
 AC_CONFIG_FILES([Makefile examples/Makefile wrappers/Makefile uniform/Makefile])
 AC_CONFIG_HEADER(config.h)
@@ -10,6 +14,8 @@ AC_PROG_CXX
 AC_PROG_FC
 AC_PROG_RANLIB
 AM_PROG_AR
+
+
 
 # OpenMP
 AC_ARG_ENABLE(openmp, [AC_HELP_STRING([--enable-openmp],[use OpenMP])], enable_openmp=$enableval, enable_openmp=no)
@@ -64,8 +70,11 @@ AC_ARG_ENABLE(mpi, [AC_HELP_STRING([--enable-mpi],[compile exaFMM MPI library])]
 if test "$enable_mpi" = "yes"; then
    ACX_MPI([],[AC_MSG_ERROR([could not find mpi library for --enable-mpi])])
    AC_CHECK_PROG(MPIRUN, mpirun, mpirun)
+   AC_CHECK_HEADERS([mpi.h])
+   AC_CHECK_HEADERS([mpif.h])
    AC_SUBST(MPIRUN)
    CXX=$MPICXX
+   FC=$MPIFC
 fi
 AM_CONDITIONAL(MPI, test "$enable_mpi" = "yes")
 
