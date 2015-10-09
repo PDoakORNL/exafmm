@@ -11,6 +11,9 @@
 \#*i\#
 *~
 .\#*
+GPATH
+GRTAGS
+GTAGS
 autom4te.cache
 config.log
 config.status
