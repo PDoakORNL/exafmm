@@ -50,6 +50,7 @@ extern "C" void FMM_Init(double _eps2, int ncrit, int threads,
   const real_t theta = 0.4;
   const bool useRmax = true;
   const bool useRopt = true;
+  bool verbose = true;
   kernel::eps2 = _eps2;
   kernel::setup();
 
