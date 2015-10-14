@@ -106,13 +106,11 @@ POST_INSTALL = :
 NORMAL_UNINSTALL = :
 PRE_UNINSTALL = :
 POST_UNINSTALL = :
-build_triplet = @build@
-host_triplet = @host@
 
 ### Thread libraries
 @OPENMP_TRUE@am__append_1 = -DWITH_OPENMP
 @OPENMP_TRUE@am__append_2 = $(OPENMP_CFLAGS)
-@WITH_TBB_TRUE@am__append_3 = -ltbb
+@WITH_TBB_TRUE@am__append_3 = -ltbb -dynamic
 @WITH_CILK_TRUE@am__append_4 = -lcilkrts
 @WITH_MTHREAD_TRUE@am__append_5 = -lmyth-native
 @WITH_QTHREAD_TRUE@am__append_6 = -lqthread
@@ -152,18 +150,12 @@ host_triplet = @host@
 
 #AM_CXXFLAGS += -fsanitize=address -Wconversion -Wundef
 @DEBUG_TRUE@am__append_22 = -ftrapv -O0 -Wall -Wextra -Winit-self -Wshadow -Wuninitialized -Wunreachable-code
-bin_PROGRAMS = petiga$(EXEEXT) gromacs$(EXEEXT)
+@MPI_TRUE@bin_PROGRAMS = petiga$(EXEEXT) gromacs$(EXEEXT)
 subdir = wrappers
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
-am__aclocal_m4_deps = $(top_srcdir)/m4/acx_mpi.m4 \
-	$(top_srcdir)/m4/ax_cc_maxopt.m4 \
-	$(top_srcdir)/m4/ax_check_compiler_flags.m4 \
-	$(top_srcdir)/m4/ax_compiler_vendor.m4 \
-	$(top_srcdir)/m4/ax_cxx_maxopt.m4 \
-	$(top_srcdir)/m4/ax_f77_maxopt.m4 \
-	$(top_srcdir)/m4/ax_gcc_archflag.m4 \
-	$(top_srcdir)/m4/ax_gcc_x86_cpuid.m4 \
-	$(top_srcdir)/m4/ax_openmp.m4 $(top_srcdir)/configure.ac
+am__aclocal_m4_deps = $(top_srcdir)/m4/ax_check_compiler_flags.m4 \
+	$(top_srcdir)/m4/ax_mpi.m4 $(top_srcdir)/m4/ax_openmp.m4 \
+	$(top_srcdir)/configure.ac
 am__configure_deps = $(am__aclocal_m4_deps) $(CONFIGURE_DEPENDENCIES) \
 	$(ACLOCAL_M4)
 DIST_COMMON = $(srcdir)/Makefile.am $(am__DIST_COMMON)
@@ -206,36 +198,50 @@ am__v_AR_0 = @echo "  AR      " $@;
 am__v_AR_1 = 
 libcharmm_a_AR = $(AR) $(ARFLAGS)
 libcharmm_a_LIBADD =
+am__libcharmm_a_SOURCES_DIST = charmm.cxx \
+	../kernels/LaplaceSphericalCPU.cxx \
+	../kernels/LaplaceP2PCPU.cxx
 am__dirstamp = $(am__leading_dot)dirstamp
-am_libcharmm_a_OBJECTS = libcharmm_a-charmm.$(OBJEXT) \
-	../kernels/libcharmm_a-LaplaceSphericalCPU.$(OBJEXT) \
-	../kernels/libcharmm_a-LaplaceP2PCPU.$(OBJEXT)
+@MPI_TRUE@am_libcharmm_a_OBJECTS = libcharmm_a-charmm.$(OBJEXT) \
+@MPI_TRUE@	../kernels/libcharmm_a-LaplaceSphericalCPU.$(OBJEXT) \
+@MPI_TRUE@	../kernels/libcharmm_a-LaplaceP2PCPU.$(OBJEXT)
 libcharmm_a_OBJECTS = $(am_libcharmm_a_OBJECTS)
 libcharmm2_a_AR = $(AR) $(ARFLAGS)
 libcharmm2_a_LIBADD =
-am_libcharmm2_a_OBJECTS = libcharmm2_a-charmm2.$(OBJEXT) \
-	../kernels/libcharmm2_a-LaplaceSphericalCPU.$(OBJEXT) \
-	../kernels/libcharmm2_a-LaplaceP2PCPU.$(OBJEXT)
+am__libcharmm2_a_SOURCES_DIST = charmm2.cxx \
+	../kernels/LaplaceSphericalCPU.cxx \
+	../kernels/LaplaceP2PCPU.cxx
+@MPI_TRUE@am_libcharmm2_a_OBJECTS = libcharmm2_a-charmm2.$(OBJEXT) \
+@MPI_TRUE@	../kernels/libcharmm2_a-LaplaceSphericalCPU.$(OBJEXT) \
+@MPI_TRUE@	../kernels/libcharmm2_a-LaplaceP2PCPU.$(OBJEXT)
 libcharmm2_a_OBJECTS = $(am_libcharmm2_a_OBJECTS)
 libgromacs_a_AR = $(AR) $(ARFLAGS)
 libgromacs_a_LIBADD =
-am_libgromacs_a_OBJECTS = libgromacs_a-gromacs.$(OBJEXT) \
-	../kernels/libgromacs_a-LaplaceSphericalCPU.$(OBJEXT) \
-	../kernels/libgromacs_a-LaplaceP2PCPU.$(OBJEXT)
+am__libgromacs_a_SOURCES_DIST = gromacs.cxx \
+	../kernels/LaplaceSphericalCPU.cxx \
+	../kernels/LaplaceP2PCPU.cxx
+@MPI_TRUE@am_libgromacs_a_OBJECTS = libgromacs_a-gromacs.$(OBJEXT) \
+@MPI_TRUE@	../kernels/libgromacs_a-LaplaceSphericalCPU.$(OBJEXT) \
+@MPI_TRUE@	../kernels/libgromacs_a-LaplaceP2PCPU.$(OBJEXT)
 libgromacs_a_OBJECTS = $(am_libgromacs_a_OBJECTS)
 libpetiga_a_AR = $(AR) $(ARFLAGS)
 libpetiga_a_LIBADD =
-am_libpetiga_a_OBJECTS = libpetiga_a-petiga.$(OBJEXT) \
-	../kernels/libpetiga_a-LaplaceCartesianCPU.$(OBJEXT) \
-	../kernels/libpetiga_a-LaplaceP2PCPU.$(OBJEXT)
+am__libpetiga_a_SOURCES_DIST = petiga.cxx \
+	../kernels/LaplaceCartesianCPU.cxx \
+	../kernels/LaplaceP2PCPU.cxx
+@MPI_TRUE@am_libpetiga_a_OBJECTS = libpetiga_a-petiga.$(OBJEXT) \
+@MPI_TRUE@	../kernels/libpetiga_a-LaplaceCartesianCPU.$(OBJEXT) \
+@MPI_TRUE@	../kernels/libpetiga_a-LaplaceP2PCPU.$(OBJEXT)
 libpetiga_a_OBJECTS = $(am_libpetiga_a_OBJECTS)
 PROGRAMS = $(bin_PROGRAMS)
-am_gromacs_OBJECTS = gromacs-test_gromacs.$(OBJEXT)
+am__gromacs_SOURCES_DIST = test_gromacs.cxx
+@MPI_TRUE@am_gromacs_OBJECTS = gromacs-test_gromacs.$(OBJEXT)
 gromacs_OBJECTS = $(am_gromacs_OBJECTS)
-gromacs_DEPENDENCIES = libgromacs.a
-am_petiga_OBJECTS = petiga-test_petiga.$(OBJEXT)
+@MPI_TRUE@gromacs_DEPENDENCIES = libgromacs.a
+am__petiga_SOURCES_DIST = test_petiga.cxx
+@MPI_TRUE@am_petiga_OBJECTS = petiga-test_petiga.$(OBJEXT)
 petiga_OBJECTS = $(am_petiga_OBJECTS)
-petiga_DEPENDENCIES = libpetiga.a
+@MPI_TRUE@petiga_DEPENDENCIES = libpetiga.a
 AM_V_P = $(am__v_P_@AM_V@)
 am__v_P_ = $(am__v_P_@AM_DEFAULT_V@)
 am__v_P_0 = false
@@ -272,9 +278,11 @@ am__v_CXXLD_1 =
 SOURCES = $(libcharmm_a_SOURCES) $(libcharmm2_a_SOURCES) \
 	$(libgromacs_a_SOURCES) $(libpetiga_a_SOURCES) \
 	$(gromacs_SOURCES) $(petiga_SOURCES)
-DIST_SOURCES = $(libcharmm_a_SOURCES) $(libcharmm2_a_SOURCES) \
-	$(libgromacs_a_SOURCES) $(libpetiga_a_SOURCES) \
-	$(gromacs_SOURCES) $(petiga_SOURCES)
+DIST_SOURCES = $(am__libcharmm_a_SOURCES_DIST) \
+	$(am__libcharmm2_a_SOURCES_DIST) \
+	$(am__libgromacs_a_SOURCES_DIST) \
+	$(am__libpetiga_a_SOURCES_DIST) $(am__gromacs_SOURCES_DIST) \
+	$(am__petiga_SOURCES_DIST)
 am__can_run_installinfo = \
   case $$AM_UPDATE_INFO_DIR in \
     n|no|NO) false;; \
@@ -328,10 +336,9 @@ ECHO_N = @ECHO_N@
 ECHO_T = @ECHO_T@
 EGREP = @EGREP@
 EXEEXT = @EXEEXT@
-F77 = @F77@
 FC = @FC@
 FCFLAGS = @FCFLAGS@
-FFLAGS = @FFLAGS@
+FCLD = @FCLD@
 GREP = @GREP@
 INSTALL = @INSTALL@
 INSTALL_DATA = @INSTALL_DATA@
@@ -343,11 +350,12 @@ LIBOBJS = @LIBOBJS@
 LIBS = @LIBS@ $(am__append_3) $(am__append_4) $(am__append_5) \
 	$(am__append_6) $(am__append_15) $(am__append_18)
 LTLIBOBJS = @LTLIBOBJS@
+MAINT = @MAINT@
 MAKEINFO = @MAKEINFO@
 MKDIR_P = @MKDIR_P@
 MPICC = @MPICC@
 MPICXX = @MPICXX@
-MPIF77 = @MPIF77@
+MPIFC = @MPIFC@
 MPILIBS = @MPILIBS@
 MPIRUN = @MPIRUN@
 MPI_INCLUDES = @MPI_INCLUDES@
@@ -363,7 +371,6 @@ PACKAGE_URL = @PACKAGE_URL@
 PACKAGE_VERSION = @PACKAGE_VERSION@
 PATH_SEPARATOR = @PATH_SEPARATOR@
 PRECISION = @PRECISION@
-PRTDIAG = @PRTDIAG@
 RANLIB = @RANLIB@
 SET_MAKE = @SET_MAKE@
 SHELL = @SHELL@
@@ -377,7 +384,6 @@ abs_top_srcdir = @abs_top_srcdir@
 ac_ct_AR = @ac_ct_AR@
 ac_ct_CC = @ac_ct_CC@
 ac_ct_CXX = @ac_ct_CXX@
-ac_ct_F77 = @ac_ct_F77@
 ac_ct_FC = @ac_ct_FC@
 am__include = @am__include@
 am__leading_dot = @am__leading_dot@
@@ -385,22 +391,14 @@ am__quote = @am__quote@
 am__tar = @am__tar@
 am__untar = @am__untar@
 bindir = @bindir@
-build = @build@
 build_alias = @build_alias@
-build_cpu = @build_cpu@
-build_os = @build_os@
-build_vendor = @build_vendor@
 builddir = @builddir@
 datadir = @datadir@
 datarootdir = @datarootdir@
 docdir = @docdir@
 dvidir = @dvidir@
 exec_prefix = @exec_prefix@
-host = @host@
 host_alias = @host_alias@
-host_cpu = @host_cpu@
-host_os = @host_os@
-host_vendor = @host_vendor@
 htmldir = @htmldir@
 includedir = @includedir@
 infodir = @infodir@
@@ -434,26 +432,26 @@ AM_CPPFLAGS = -I../include -I../uniform $(am__append_1) \
 	$(am__append_17) $(am__append_19) $(am__append_20) \
 	$(am__append_21)
 AM_MAKEFLAGS = -s
-lib_LIBRARIES = libpetiga.a libgromacs.a libcharmm.a libcharmm2.a
-libpetiga_a_SOURCES = petiga.cxx ../kernels/LaplaceCartesianCPU.cxx ../kernels/LaplaceP2PCPU.cxx
-libpetiga_a_CPPFLAGS = $(AM_CPPFLAGS) -DLaplace -DCartesian -DEXPANSION=4
-libgromacs_a_SOURCES = gromacs.cxx ../kernels/LaplaceSphericalCPU.cxx ../kernels/LaplaceP2PCPU.cxx
-libgromacs_a_CPPFLAGS = $(AM_CPPFLAGS) -DLaplace -DSpherical -DEXPANSION=9
-libcharmm_a_SOURCES = charmm.cxx ../kernels/LaplaceSphericalCPU.cxx ../kernels/LaplaceP2PCPU.cxx
-libcharmm_a_CPPFLAGS = $(AM_CPPFLAGS) -DLaplace -DSpherical -DEXPANSION=9
-libcharmm2_a_SOURCES = charmm2.cxx ../kernels/LaplaceSphericalCPU.cxx ../kernels/LaplaceP2PCPU.cxx
-libcharmm2_a_CPPFLAGS = $(AM_CPPFLAGS) -DLaplace -DSpherical -DEXPANSION=9
-petiga_SOURCES = test_petiga.cxx
-petiga_CPPFLAGS = $(AM_CPPFLAGS)
-petiga_LDADD = libpetiga.a
-gromacs_SOURCES = test_gromacs.cxx
-gromacs_CPPFLAGS = $(AM_CPPFLAGS)
-gromacs_LDADD = libgromacs.a
+@MPI_TRUE@lib_LIBRARIES = libpetiga.a libgromacs.a libcharmm.a libcharmm2.a
+@MPI_TRUE@libpetiga_a_SOURCES = petiga.cxx ../kernels/LaplaceCartesianCPU.cxx ../kernels/LaplaceP2PCPU.cxx
+@MPI_TRUE@libpetiga_a_CPPFLAGS = $(AM_CPPFLAGS) -DLaplace -DCartesian -DEXPANSION=4
+@MPI_TRUE@libgromacs_a_SOURCES = gromacs.cxx ../kernels/LaplaceSphericalCPU.cxx ../kernels/LaplaceP2PCPU.cxx
+@MPI_TRUE@libgromacs_a_CPPFLAGS = $(AM_CPPFLAGS) -DLaplace -DSpherical -DEXPANSION=9
+@MPI_TRUE@libcharmm_a_SOURCES = charmm.cxx ../kernels/LaplaceSphericalCPU.cxx ../kernels/LaplaceP2PCPU.cxx
+@MPI_TRUE@libcharmm_a_CPPFLAGS = $(AM_CPPFLAGS) -DLaplace -DSpherical -DEXPANSION=9
+@MPI_TRUE@libcharmm2_a_SOURCES = charmm2.cxx ../kernels/LaplaceSphericalCPU.cxx ../kernels/LaplaceP2PCPU.cxx
+@MPI_TRUE@libcharmm2_a_CPPFLAGS = $(AM_CPPFLAGS) -DLaplace -DSpherical -DEXPANSION=9
+@MPI_TRUE@petiga_SOURCES = test_petiga.cxx
+@MPI_TRUE@petiga_CPPFLAGS = $(AM_CPPFLAGS)
+@MPI_TRUE@petiga_LDADD = libpetiga.a
+@MPI_TRUE@gromacs_SOURCES = test_gromacs.cxx
+@MPI_TRUE@gromacs_CPPFLAGS = $(AM_CPPFLAGS)
+@MPI_TRUE@gromacs_LDADD = libgromacs.a
 all: all-am
 
 .SUFFIXES:
 .SUFFIXES: .cxx .o .obj
-$(srcdir)/Makefile.in:  $(srcdir)/Makefile.am $(srcdir)/../Makefile.am.include $(am__configure_deps)
+$(srcdir)/Makefile.in: @MAINTAINER_MODE_TRUE@ $(srcdir)/Makefile.am $(srcdir)/../Makefile.am.include $(am__configure_deps)
 	@for dep in $?; do \
 	  case '$(am__configure_deps)' in \
 	    *$$dep*) \
@@ -478,9 +476,9 @@ $(srcdir)/../Makefile.am.include $(am__empty):
 $(top_builddir)/config.status: $(top_srcdir)/configure $(CONFIG_STATUS_DEPENDENCIES)
 	cd $(top_builddir) && $(MAKE) $(AM_MAKEFLAGS) am--refresh
 
-$(top_srcdir)/configure:  $(am__configure_deps)
+$(top_srcdir)/configure: @MAINTAINER_MODE_TRUE@ $(am__configure_deps)
 	cd $(top_builddir) && $(MAKE) $(AM_MAKEFLAGS) am--refresh
-$(ACLOCAL_M4):  $(am__aclocal_m4_deps)
+$(ACLOCAL_M4): @MAINTAINER_MODE_TRUE@ $(am__aclocal_m4_deps)
 	cd $(top_builddir) && $(MAKE) $(AM_MAKEFLAGS) am--refresh
 $(am__aclocal_m4_deps):
 install-libLIBRARIES: $(lib_LIBRARIES)
@@ -1083,14 +1081,14 @@ save:
 # charmm2_CPPFLAGS = $(AM_CPPFLAGS)
 # charmm2_LDADD = libcharmm2.a
 
-run_charmm: charmm
-	./$< water_32.fmm water.out 0
-run_charmm2: charmm2
-	./$< water_32.fmm water.out 0
-run_gromacs: gromacs
-	$(MPIRUN) -n 2 ./$<
-run_petiga: petiga
-	$(MPIRUN) -n 2 ./$<
+@MPI_TRUE@run_charmm: charmm
+@MPI_TRUE@	./$< water_32.fmm water.out 0
+@MPI_TRUE@run_charmm2: charmm2
+@MPI_TRUE@	./$< water_32.fmm water.out 0
+@MPI_TRUE@run_gromacs: gromacs
+@MPI_TRUE@	$(MPIRUN) -n 2 ./$<
+@MPI_TRUE@run_petiga: petiga
+@MPI_TRUE@	$(MPIRUN) -n 2 ./$<
 
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.

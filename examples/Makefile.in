@@ -105,13 +105,11 @@ POST_INSTALL = :
 NORMAL_UNINSTALL = :
 PRE_UNINSTALL = :
 POST_UNINSTALL = :
-build_triplet = @build@
-host_triplet = @host@
 
 ### Thread libraries
 @OPENMP_TRUE@am__append_1 = -DWITH_OPENMP
 @OPENMP_TRUE@am__append_2 = $(OPENMP_CFLAGS)
-@WITH_TBB_TRUE@am__append_3 = -ltbb
+@WITH_TBB_TRUE@am__append_3 = -ltbb -dynamic
 @WITH_CILK_TRUE@am__append_4 = -lcilkrts
 @WITH_MTHREAD_TRUE@am__append_5 = -lmyth-native
 @WITH_QTHREAD_TRUE@am__append_6 = -lqthread
@@ -159,15 +157,9 @@ bin_PROGRAMS = laplace_cartesian$(EXEEXT) laplace_spherical$(EXEEXT) \
 @MPI_TRUE@am__append_23 = laplace_cartesian_mpi laplace_spherical_mpi helmholtz_spherical_mpi ewald_mpi
 subdir = examples
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
-am__aclocal_m4_deps = $(top_srcdir)/m4/acx_mpi.m4 \
-	$(top_srcdir)/m4/ax_cc_maxopt.m4 \
-	$(top_srcdir)/m4/ax_check_compiler_flags.m4 \
-	$(top_srcdir)/m4/ax_compiler_vendor.m4 \
-	$(top_srcdir)/m4/ax_cxx_maxopt.m4 \
-	$(top_srcdir)/m4/ax_f77_maxopt.m4 \
-	$(top_srcdir)/m4/ax_gcc_archflag.m4 \
-	$(top_srcdir)/m4/ax_gcc_x86_cpuid.m4 \
-	$(top_srcdir)/m4/ax_openmp.m4 $(top_srcdir)/configure.ac
+am__aclocal_m4_deps = $(top_srcdir)/m4/ax_check_compiler_flags.m4 \
+	$(top_srcdir)/m4/ax_mpi.m4 $(top_srcdir)/m4/ax_openmp.m4 \
+	$(top_srcdir)/configure.ac
 am__configure_deps = $(am__aclocal_m4_deps) $(CONFIGURE_DEPENDENCIES) \
 	$(ACLOCAL_M4)
 DIST_COMMON = $(srcdir)/Makefile.am $(am__DIST_COMMON)
@@ -360,10 +352,9 @@ ECHO_N = @ECHO_N@
 ECHO_T = @ECHO_T@
 EGREP = @EGREP@
 EXEEXT = @EXEEXT@
-F77 = @F77@
 FC = @FC@
 FCFLAGS = @FCFLAGS@
-FFLAGS = @FFLAGS@
+FCLD = @FCLD@
 GREP = @GREP@
 INSTALL = @INSTALL@
 INSTALL_DATA = @INSTALL_DATA@
@@ -375,11 +366,12 @@ LIBOBJS = @LIBOBJS@
 LIBS = @LIBS@ $(am__append_3) $(am__append_4) $(am__append_5) \
 	$(am__append_6) $(am__append_15) $(am__append_18)
 LTLIBOBJS = @LTLIBOBJS@
+MAINT = @MAINT@
 MAKEINFO = @MAKEINFO@
 MKDIR_P = @MKDIR_P@
 MPICC = @MPICC@
 MPICXX = @MPICXX@
-MPIF77 = @MPIF77@
+MPIFC = @MPIFC@
 MPILIBS = @MPILIBS@
 MPIRUN = @MPIRUN@
 MPI_INCLUDES = @MPI_INCLUDES@
@@ -395,7 +387,6 @@ PACKAGE_URL = @PACKAGE_URL@
 PACKAGE_VERSION = @PACKAGE_VERSION@
 PATH_SEPARATOR = @PATH_SEPARATOR@
 PRECISION = @PRECISION@
-PRTDIAG = @PRTDIAG@
 RANLIB = @RANLIB@
 SET_MAKE = @SET_MAKE@
 SHELL = @SHELL@
@@ -409,7 +400,6 @@ abs_top_srcdir = @abs_top_srcdir@
 ac_ct_AR = @ac_ct_AR@
 ac_ct_CC = @ac_ct_CC@
 ac_ct_CXX = @ac_ct_CXX@
-ac_ct_F77 = @ac_ct_F77@
 ac_ct_FC = @ac_ct_FC@
 am__include = @am__include@
 am__leading_dot = @am__leading_dot@
@@ -417,22 +407,14 @@ am__quote = @am__quote@
 am__tar = @am__tar@
 am__untar = @am__untar@
 bindir = @bindir@
-build = @build@
 build_alias = @build_alias@
-build_cpu = @build_cpu@
-build_os = @build_os@
-build_vendor = @build_vendor@
 builddir = @builddir@
 datadir = @datadir@
 datarootdir = @datarootdir@
 docdir = @docdir@
 dvidir = @dvidir@
 exec_prefix = @exec_prefix@
-host = @host@
 host_alias = @host_alias@
-host_cpu = @host_cpu@
-host_os = @host_os@
-host_vendor = @host_vendor@
 htmldir = @htmldir@
 includedir = @includedir@
 infodir = @infodir@
@@ -492,7 +474,7 @@ all: all-am
 
 .SUFFIXES:
 .SUFFIXES: .cxx .o .obj
-$(srcdir)/Makefile.in:  $(srcdir)/Makefile.am $(srcdir)/../Makefile.am.include $(am__configure_deps)
+$(srcdir)/Makefile.in: @MAINTAINER_MODE_TRUE@ $(srcdir)/Makefile.am $(srcdir)/../Makefile.am.include $(am__configure_deps)
 	@for dep in $?; do \
 	  case '$(am__configure_deps)' in \
 	    *$$dep*) \
@@ -517,9 +499,9 @@ $(srcdir)/../Makefile.am.include $(am__empty):
 $(top_builddir)/config.status: $(top_srcdir)/configure $(CONFIG_STATUS_DEPENDENCIES)
 	cd $(top_builddir) && $(MAKE) $(AM_MAKEFLAGS) am--refresh
 
-$(top_srcdir)/configure:  $(am__configure_deps)
+$(top_srcdir)/configure: @MAINTAINER_MODE_TRUE@ $(am__configure_deps)
 	cd $(top_builddir) && $(MAKE) $(AM_MAKEFLAGS) am--refresh
-$(ACLOCAL_M4):  $(am__aclocal_m4_deps)
+$(ACLOCAL_M4): @MAINTAINER_MODE_TRUE@ $(am__aclocal_m4_deps)
 	cd $(top_builddir) && $(MAKE) $(AM_MAKEFLAGS) am--refresh
 $(am__aclocal_m4_deps):
 install-binPROGRAMS: $(bin_PROGRAMS)
