@@ -5,13 +5,13 @@
 /* #undef ASSERT */
 
 /* Count number of M2L and P2P kernel calls. */
-#define COUNT_KERNEL 1
+/* #undef COUNT_KERNEL */
 
 /* Count interaction list per cell. */
 /* #undef COUNT_LIST */
 
 /* Define to enable extra debugging options. */
-#define DEBUG 1
+/* #undef DEBUG */
 
 /* Define to compile in single precision. */
 /* #undef EXAFMM_SINGLE */
@@ -20,19 +20,19 @@
 /* #undef HAVE_AVX */
 
 /* Define to 1 if you have the <inttypes.h> header file. */
-/* #undef HAVE_INTTYPES_H */
+#define HAVE_INTTYPES_H 1
 
 /* Define to 1 if you have the <memory.h> header file. */
-/* #undef HAVE_MEMORY_H */
+#define HAVE_MEMORY_H 1
 
 /* Define if you have the MPI library. */
-/* #undef HAVE_MPI */
+#define HAVE_MPI 1
 
 /* Define to 1 if you have the <mpif.h> header file. */
 /* #undef HAVE_MPIF_H */
 
 /* Define to 1 if you have the <mpi.h> header file. */
-/* #undef HAVE_MPI_H */
+#define HAVE_MPI_H 1
 
 /* Define to enable ARM NEON optimizations. */
 /* #undef HAVE_NEON */
@@ -44,25 +44,25 @@
 /* #undef HAVE_SSE3 */
 
 /* Define to 1 if you have the <stdint.h> header file. */
-/* #undef HAVE_STDINT_H */
+#define HAVE_STDINT_H 1
 
 /* Define to 1 if you have the <stdlib.h> header file. */
-/* #undef HAVE_STDLIB_H */
+#define HAVE_STDLIB_H 1
 
 /* Define to 1 if you have the <strings.h> header file. */
-/* #undef HAVE_STRINGS_H */
+#define HAVE_STRINGS_H 1
 
 /* Define to 1 if you have the <string.h> header file. */
-/* #undef HAVE_STRING_H */
+#define HAVE_STRING_H 1
 
 /* Define to 1 if you have the <sys/stat.h> header file. */
-/* #undef HAVE_SYS_STAT_H */
+#define HAVE_SYS_STAT_H 1
 
 /* Define to 1 if you have the <sys/types.h> header file. */
-/* #undef HAVE_SYS_TYPES_H */
+#define HAVE_SYS_TYPES_H 1
 
 /* Define to 1 if you have the <unistd.h> header file. */
-/* #undef HAVE_UNISTD_H */
+#define HAVE_UNISTD_H 1
 
 /* Name of package */
 #define PACKAGE "exafmm"
@@ -86,7 +86,7 @@
 #define PACKAGE_VERSION "1.0"
 
 /* Define to 1 if you have the ANSI C header files. */
-/* #undef STDC_HEADERS */
+#define STDC_HEADERS 1
 
 /* Enable DAG recorder. */
 /* #undef USE_DAG */
