@@ -9,6 +9,7 @@
 #include "tree_mpi.h"
 #include "up_down_pass.h"
 #include "verify.h"
+using namespace exafmm;
 
 int main(int argc, char ** argv) {
   const real_t cycle = 2 * M_PI;
@@ -29,7 +30,7 @@ int main(int argc, char ** argv) {
   num_threads(args.threads);
 
   kernel::eps2 = 0.0;
-#if Helmholtz
+#if EXAFMM_HELMHOLTZ
   kernel::wavek = complex_t(10.,1.) / real_t(2 * M_PI);
 #endif
   kernel::setup();

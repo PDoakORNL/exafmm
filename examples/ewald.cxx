@@ -10,12 +10,13 @@
 #include "tree_mpi.h"
 #include "up_down_pass.h"
 #include "verify.h"
-#if MASS
+#if EXAFMM_MASS
 #error Turn off MASS for this test
 #endif
-#if EXPANSION < 10
+#if EXAFMM_EXPANSION < 10
 #error Use P >=10 for this test
 #endif
+using namespace exafmm;
 
 int main(int argc, char ** argv) {
   const int ksize = 11;

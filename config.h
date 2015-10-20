@@ -20,13 +20,26 @@
 /* #undef HAVE_AVX */
 
 /* Define to 1 if you have the <inttypes.h> header file. */
+<<<<<<< HEAD
 #define HAVE_INTTYPES_H 1
 
 /* Define to 1 if you have the <memory.h> header file. */
 #define HAVE_MEMORY_H 1
+=======
+/* #undef HAVE_INTTYPES_H */
+
+/* Define to 1 if you have the <memory.h> header file. */
+/* #undef HAVE_MEMORY_H */
+>>>>>>> master
 
 /* Define if you have the MPI library. */
-#define HAVE_MPI 1
+/* #undef HAVE_MPI */
+
+/* Define to 1 if you have the <mpif.h> header file. */
+/* #undef HAVE_MPIF_H */
+
+/* Define to 1 if you have the <mpi.h> header file. */
+/* #undef HAVE_MPI_H */
 
 /* Define to 1 if you have the <mpif.h> header file. */
 /* #undef HAVE_MPIF_H */
@@ -44,6 +57,7 @@
 /* #undef HAVE_SSE3 */
 
 /* Define to 1 if you have the <stdint.h> header file. */
+<<<<<<< HEAD
 #define HAVE_STDINT_H 1
 
 /* Define to 1 if you have the <stdlib.h> header file. */
@@ -63,6 +77,27 @@
 
 /* Define to 1 if you have the <unistd.h> header file. */
 #define HAVE_UNISTD_H 1
+=======
+/* #undef HAVE_STDINT_H */
+
+/* Define to 1 if you have the <stdlib.h> header file. */
+/* #undef HAVE_STDLIB_H */
+
+/* Define to 1 if you have the <strings.h> header file. */
+/* #undef HAVE_STRINGS_H */
+
+/* Define to 1 if you have the <string.h> header file. */
+/* #undef HAVE_STRING_H */
+
+/* Define to 1 if you have the <sys/stat.h> header file. */
+/* #undef HAVE_SYS_STAT_H */
+
+/* Define to 1 if you have the <sys/types.h> header file. */
+/* #undef HAVE_SYS_TYPES_H */
+
+/* Define to 1 if you have the <unistd.h> header file. */
+/* #undef HAVE_UNISTD_H */
+>>>>>>> master
 
 /* Name of package */
 #define PACKAGE "exafmm"
@@ -87,6 +122,9 @@
 
 /* Define to 1 if you have the ANSI C header files. */
 #define STDC_HEADERS 1
+
+/* Define to 1 if you have the ANSI C header files. */
+/* #undef STDC_HEADERS */
 
 /* Enable DAG recorder. */
 /* #undef USE_DAG */

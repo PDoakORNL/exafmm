@@ -1,41 +1,55 @@
 -- Immediate --
-Test on cray, fx10, sx-ace
+1. HSS serial, when done search Makefile.am for "hss" and remove
+2. HSS MPI
+3. Helmholtz SIMD
+4. Helmholtz conjugate
+5. Stokes kernels
+6. Calculate Flops
+7. Cycle counter kernel timer
+
+-- MPI --
+LBT MPI <- ICELL is being calculated from localBounds
+MPI overhaul
+Test difficult distributions for partitioning and LET
+MPI-3.0 lock all
+cycle counter based weights
+2:1 refinement for precomputation
+non-orthogonal recursive bisection
+
+-- automake --
 Setup buildbot tests using "make check"
-LBT mpi <- ICELL is being calculated from localBounds
 move contents of macros.h to configure.ac
+examples/Makefile options to args
+
+-- types --
 args.h, verify.h from class to namespace
-Have only one P2P
-SIMD for Helmholtz P2P
-Helmholtz DTT
-Fix without TBB
 logger.h split to print.h
 bodies -> bodies + fields, bodyPos -> bodies, bodyAcc -> fields
 AoS, SoA union by Strzodka
-examples/Makefile options to args
 Use compressed Cell struct of Bonsai
-Don't try to instantiate all the classes at the top (wait until useful parameters are ready)
+
+-- tree build --
 Separate key manipulation namespace, e.g. interleaveMorton(), deinterleveHilbert() (controllable key_t)
+Morton -> Hilbert
+
+-- kernels --
+Have only one P2P
 Distinguish Pmax and P. Make P runtime option
 Use getIndex for NO_P2P
-
--- Features to add --
-Time each kernel separately using cycle counters
-cycle counter based weights
-TBB -> OpenMP with atomics -> flush
-MPI-3.0 lock all
 Kahan + fixed precision
 Solid harmonics kernel
-Morton -> Hilbert
+
+-- driver --
+Don't try to instantiate all the classes at the top (wait until useful parameters are ready)
+TBB -> OpenMP with atomics -> flush
 splitRange defined in both dataset.h and partition.h
 UVWX-list with precomputation
-2:1 refinement for precomputation
 Periodic B.C. by one precomputed translation matrix
 Teng's BH MAC with M2P option during DTT
-non-orthogonal recursive bisection
-Integrate with /gpu
 Interface with BEM code
+charmm2: remove repartition inside Ewald & VdW
 
--- GPU integration --
+-- GPU --
 CUDA 6.0 debug
 Unify dataset
 .h -> .cxx/.cu
@@ -48,15 +62,3 @@ DTT vs. UVWX-list
 Separate +- tree vs. Single tree
 Cartesian vs. Spherical (optimized)
 ORB vs. HOT
-
--- Debugging tips --
-Write the kind of code where standard gcc can catch the bug, exceptions, assertions
-Add assertions and keep them there
-Shift bodies
-traverseLET 0 distance
-graft 0
-serial mimic parallel
-
--- Issues --
-charmm2: remove repartition inside Ewald & VdW
-Intel OpenMP error
