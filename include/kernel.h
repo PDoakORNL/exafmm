@@ -3,8 +3,14 @@
 #include <cmath>
 #include "types.h"
 
+using std::cos;
+using std::sin;
+
 namespace exafmm {
   namespace kernel {
+    using std::cos;
+    using std::sin;
+    using std::exp;
     extern real_t eps2;                                         //!< Epslion squared
     extern complex_t wavek;                                     //!< Helmholtz wave number
     extern vec3 Xperiodic;                                      //!< Periodic coordinate offset

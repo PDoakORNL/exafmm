@@ -24,6 +24,8 @@ namespace exafmm {
   private:
     //! Forward DFT
     void dft(Waves & waves, Bodies & bodies) const {
+      using std::cos;
+      using std::sin;
       real_t scale = 2 * M_PI / cycle;                          // Scale conversion
 #pragma omp parallel for
       for (int w=0; w<int(waves.size()); w++) {                 // Loop over waves
@@ -40,6 +42,8 @@ namespace exafmm {
 
     //! Inverse DFT
     void idft(Waves & waves, Bodies & bodies) const {
+      using std::cos;
+      using std::sin;
       real_t scale = 2 * M_PI / cycle;                          // Scale conversion
 #pragma omp parallel for
       for (int b=0; b<int(bodies.size()); b++) {                // Loop over bodies
@@ -86,6 +90,7 @@ namespace exafmm {
 
     //! Ewald real part P2P kernel
     void P2P(C_iter Ci, C_iter Cj, vec3 Xperiodic) const {
+      using std::exp;
       for (B_iter Bi=Ci->BODY; Bi!=Ci->BODY+Ci->NBODY; Bi++) {  // Loop over target bodies
 	for (B_iter Bj=Cj->BODY; Bj!=Cj->BODY+Cj->NBODY; Bj++) {//  Loop over source bodies
 	  vec3 dX = Bi->X - Bj->X - Xperiodic;                  //   Distance vector from source to target
@@ -159,6 +164,7 @@ namespace exafmm {
 
     //! Ewald wave part
     void wavePart(Bodies & bodies, Bodies & jbodies) {
+      using std::exp;
       logger::startTimer("Ewald wave part");                    // Start timer
       Waves waves = initWaves();                                // Initialize wave vector
       dft(waves,jbodies);                                       // Apply DFT to bodies to get waves

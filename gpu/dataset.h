@@ -41,6 +41,8 @@ private:
 public:
   std::vector<kvec4> pos;
   Dataset(unsigned long _n) : n(_n), pos(_n) {
+    using std::cos;
+    using std::sin;
 #if MASS
     if (read("plummer.dat")) return;
     unsigned long i = 0;

@@ -88,6 +88,8 @@ namespace exafmm {
 
     //! Random distribution on one octant of a r = 1 sphere
     Bodies octant(int numBodies, int seed, int numSplit) {
+      using std::cos;
+      using std::sin;
       Bodies bodies(numBodies);                                 // Initialize bodies
       for (int i=0; i<numSplit; i++, seed++) {                  // Loop over partitions (if there are any)
 	int begin = 0;                                          //  Begin index of bodies
@@ -107,6 +109,8 @@ namespace exafmm {
 
     //! Plummer distribution in a r = M_PI/2 sphere
     Bodies plummer(int numBodies, int seed, int numSplit) {
+      using std::cos;
+      using std::sin;
       Bodies bodies(numBodies);                                 // Initialize bodies
       for (int i=0; i<numSplit; i++, seed++) {                  // Loop over partitions (if there are any)
 	int begin = 0;                                          //  Begin index of bodies

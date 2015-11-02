@@ -31,6 +31,8 @@ void polynomial(real_t x, int n, real_t & pol, real_t & der, real_t & sum) {
 }
 
 void legendre(int nq, real_t * xq, real_t * wq) {
+  using std::cos;
+  using std::sin;
   real_t pol = 0, der, sum;
   real_t h = M_PI / (2 * nq);
   for (int i=1; i<=nq; i++) {

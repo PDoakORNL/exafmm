@@ -11,6 +11,10 @@ AC_PROG_CXX([xlC_r xlC FCCpx FCC sxc++ CC icpc g++])
 AC_PROG_FC([xlf90_r xlf90 frtpx frt sxf90 ftn ifort gfortran])
 AC_PROG_RANLIB
 AM_PROG_AR
+AC_LANG_PUSH([C++])
+AC_CHECK_HEADER(cmath, , [AC_MSG_ERROR(
+[Couldn't locate cmath check your c++ header path] )])
+AC_LANG_POP([C++])
 
 # OpenMP
 AC_ARG_ENABLE(openmp, [AC_HELP_STRING([--enable-openmp],[use OpenMP])], enable_openmp=$enableval, enable_openmp=no)
