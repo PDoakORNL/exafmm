@@ -35,7 +35,6 @@ coverage_report
 depcomp
 install-sh
 libtool
-m4
 missing
 stamp-h1
 *~
