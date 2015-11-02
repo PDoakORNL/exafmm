@@ -132,7 +132,10 @@ int main(int argc, char ** argv) {
     logger::stopPAPI();
     logger::stopTimer("Total FMM", 0);
     logger::printTitle("MPI direct sum");
-    const int numTargets = 100;
+    int numTargets = 1000;
+    if (args.full) {
+      numTargets = args.numBodies;
+    }
     buffer = bodies;
     data.sampleBodies(bodies, numTargets);
     bodies2 = bodies;
@@ -152,11 +155,19 @@ int main(int argc, char ** argv) {
     double potNrm = verify.getNrmScalar(bodies);
     double accDif = verify.getDifVector(bodies, bodies2);
     double accNrm = verify.getNrmVector(bodies);
+    double sumSampDirect = verify.getSumScalar(bodies);
+    double sumSampFMM = verify.getSumScalar(bodies2);
     double potDifGlob, potNrmGlob, accDifGlob, accNrmGlob;
+    double sumSampDirectGlob, sumSampFMMGlob;
     MPI_Reduce(&potDif, &potDifGlob, 1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);
     MPI_Reduce(&potNrm, &potNrmGlob, 1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);
     MPI_Reduce(&accDif, &accDifGlob, 1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);
     MPI_Reduce(&accNrm, &accNrmGlob, 1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);
+    MPI_Reduce(&sumSampFMM, &sumSampFMMGlob, 1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);
+    MPI_Reduce(&sumSampDirect, &sumSampDirectGlob, 1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);
+    logger::printTitle("Sums of Samples");
+    verify.print("Direct:",sumSampDirect);
+    verify.print("FMM:",sumSampFMM);	
     logger::printTitle("FMM vs. direct");
     verify.print("Rel. L2 Error (pot)",std::sqrt(potDifGlob/potNrmGlob));
     verify.print("Rel. L2 Error (acc)",std::sqrt(accDifGlob/accNrmGlob));

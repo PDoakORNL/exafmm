@@ -32,16 +32,16 @@ int main(int argc, char ** argv) {
   args.print(logger::stringLength, P);
   bodies = data.initBodies(args.numBodies, args.distribution, 0);
   buffer.reserve(bodies.size());
-  if (args.IneJ) {
-    for (B_iter B=bodies.begin(); B!=bodies.end(); B++) {
-      B->X[0] += M_PI;
-      B->X[0] *= 0.5;
-    }
+  if (args.IneJ) { // Sources and Targets are different
+    // for (B_iter B=bodies.begin(); B!=bodies.end(); B++) {
+    //   B->X[0] += M_PI;
+    //   B->X[0] *= 0.5;
+    // }
     jbodies = data.initBodies(args.numBodies, args.distribution, 1);
-    for (B_iter B=jbodies.begin(); B!=jbodies.end(); B++) {
-      B->X[0] -= M_PI;
-      B->X[0] *= 0.5;
-    }
+    // for (B_iter B=jbodies.begin(); B!=jbodies.end(); B++) {
+    //   B->X[0] -= M_PI;
+    //   B->X[0] *= 0.5;
+    // }
   }
   for (int t=0; t<args.repeat; t++) {
     logger::printTitle("FMM Profiling");
@@ -74,7 +74,12 @@ int main(int argc, char ** argv) {
       logger::writeTime();
     }
     traversal.writeList(cells, 0);
-    const int numTargets = 1000;
+    
+    int numTargets = 1000;
+    if (args.full) {
+      numTargets = args.numBodies;
+    }
+    
     buffer = bodies;
     data.sampleBodies(bodies, numTargets);
     bodies2 = bodies;
@@ -87,6 +92,11 @@ int main(int argc, char ** argv) {
     double potNrm = verify.getNrmScalar(bodies);
     double accDif = verify.getDifVector(bodies, bodies2);
     double accNrm = verify.getNrmVector(bodies);
+    double sumSampDirect = verify.getSumScalar(bodies);
+    double sumSampFMM = verify.getSumScalar(bodies2);
+    logger::printTitle("Sums of Samples");
+    verify.print("Direct:",sumSampDirect);
+    verify.print("FMM:",sumSampFMM);	
     logger::printTitle("FMM vs. direct");
     verify.print("Rel. L2 Error (pot)",std::sqrt(potDif/potNrm));
     verify.print("Rel. L2 Error (acc)",std::sqrt(accDif/accNrm));

@@ -14,6 +14,7 @@ namespace exafmm {
     {"ncrit",        required_argument, 0, 'c'},
     {"distribution", required_argument, 0, 'd'},
     {"dual",         no_argument,       0, 'D'},
+    {"full",         no_argument,       0, 'f'},
     {"graft",        no_argument,       0, 'g'},
     {"getMatrix",    no_argument,       0, 'G'},
     {"help",         no_argument,       0, 'h'},
@@ -38,6 +39,7 @@ namespace exafmm {
     int ncrit;
     const char * distribution;
     int dual;
+    int full;
     int graft;
     int getMatrix;
     int images;
@@ -61,6 +63,7 @@ namespace exafmm {
 	      " --ncrit (-c)                  : Number of bodies per leaf cell (%d)\n"
 	      " --distribution (-d) [l/c/s/p] : lattice, cube, sphere, octant, plummer (%s)\n"
 	      " --dual (-D)                   : Use dual tree traversal (%d)\n"
+	      " --full (-f)                   : Do full sum to check FMM accuracy (%d)\n"
 	      " --graft (-g)                  : Graft remote trees to global tree (%d)\n"
 	      " --getMatrix (-G)              : Write G matrix to file (%d)\n"
 	      " --help (-h)                   : Show this help document\n"
@@ -80,6 +83,7 @@ namespace exafmm {
 	      ncrit,
 	      distribution,
 	      dual,
+	      full,
 	      graft,
 	      getMatrix,
 	      images,
@@ -120,6 +124,7 @@ namespace exafmm {
       ncrit(64),
       distribution("cube"),
       dual(0),
+      full(0),
       graft(0),
       getMatrix(0),
       images(0),
@@ -140,8 +145,12 @@ namespace exafmm {
 	int c = getopt(argc, argv, "c:d:DgGhi:jmn:or:s:t:T:vwx");
 #else
 	int option_index;
+<<<<<<< 0f0ae088c6e513d887e393eea386bd4c56df071c
 	int c = getopt_long(argc, argv, "c:d:DgGhi:jmn:or:s:t:T:vwx", long_options, &option_index);
 #endif
+=======
+	int c = getopt_long(argc, argv, "c:d:DfgGhi:jmn:or:s:t:T:vwx", long_options, &option_index);
+>>>>>>> my full sum back in and toward a sane .gitignore
 	if (c == -1) break;
 	switch (c) {
 	case 'c':
@@ -152,6 +161,9 @@ namespace exafmm {
 	  break;
 	case 'D':
 	  dual = 1;
+	  break;
+	case 'f':
+	  full = 1;
 	  break;
 	case 'g':
 	  graft = 1;
@@ -213,6 +225,8 @@ namespace exafmm {
 		  << "distribution" << " : " << distribution << std::endl
 		  << std::setw(stringLength)
 		  << "dual" << " : " << dual << std::endl
+		  << std::setw(stringLength)
+		  << "full" << " : " << full << std::endl
 		  << std::setw(stringLength)
 		  << "graft" << " : " << graft << std::endl
 		  << std::setw(stringLength)
