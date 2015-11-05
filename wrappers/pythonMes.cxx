@@ -8,14 +8,11 @@
 #include "traversal.h"
 #include "tree_mpi.h"
 #include "up_down_pass.h"
-#include "van_der_waals.h"
 #if MASS
 #error Turn off MASS for this wrapper
 #endif
 
 using namespace exafmm;
-
-static const double Celec = 332.0716;
 
 Args * args;
 BaseMPI * baseMPI;
@@ -25,15 +22,31 @@ Partition * partition;
 Traversal * traversal;
 TreeMPI * treeMPI;
 UpDownPass * upDownPass;
-
 Bodies buffer;
 Bounds localBounds;
 Bounds globalBounds;
 
-extern "C" void fmm_init(int & images, double & theta, int & verbose) {
+extern "C" void Test_Init(int images) {
+  printf("in images\n");
+}
+
+extern "C" void Test_Init2(int images) {
+  printf("in images %d\n ", images);
+}
+
+extern "C" int get_mpirank(void) {
+  return baseMPI->mpirank;
+}
+
+extern "C" void mpi_finalize(void) {
+  MPI_Finalize();
+}
+
+extern "C" void FMM_Init(int images) {
   const int ncrit = 32;
   const int nspawn = 1000;
   const real_t eps2 = 0.0;
+  const real_t theta = 0.4;
   const bool useRmax = true;
   const bool useRopt = true;
   args = new Args;
@@ -52,15 +65,16 @@ extern "C" void fmm_init(int & images, double & theta, int & verbose) {
   args->images = images;
   args->mutual = 0;
   args->dual = 1;
-  args->verbose = verbose;
+  args->graft = 1;
+  args->verbose = 1;
   args->distribution = "external";
-  args->verbose &= verbose & (baseMPI->mpirank == 0);
+  args->verbose &= baseMPI->mpirank == 0;
   logger::verbose = args->verbose;
   logger::printTitle("Initial Parameters");
   args->print(logger::stringLength, P);
 }
 
-extern "C" void fmm_finalize() {
+extern "C" void FMM_Finalize() {
   delete args;
   delete baseMPI;
   delete boundBox;
@@ -72,85 +86,85 @@ extern "C" void fmm_finalize() {
   delete upDownPass;
 }
 
-extern "C" void fmm_partition(int & nglobal, int * icpumap, double * x, double * q,
-			       double * xold, double & cycle) {
+extern "C" void FMM_Partition(int & n, int * index, double * x, double * q, double cycle) {
   logger::printTitle("Partition Profiling");
   const int shift = 29;
   const int mask = ~(0x7U << shift);
-  int nlocal = 0;
-  for (int i=0; i<nglobal; i++) {
-    if (icpumap[i] == 1) nlocal++;
-  }
-  Bodies bodies(nlocal);
-  B_iter B = bodies.begin();
-  for (int i=0; i<nglobal; i++) {
-    if (icpumap[i] == 1) {
-      B->X[0] = x[3*i+0];
-      B->X[1] = x[3*i+1];
-      B->X[2] = x[3*i+2];
-      B->SRC = q[i];
-      B->TRG[0] = xold[3*i+0];
-      B->TRG[1] = xold[3*i+1];
-      B->TRG[2] = xold[3*i+2];
-      int iwrap = wrap(B->X, cycle);
-      B->IBODY = i | (iwrap << shift);
-      B++;
-    }
+  Bodies bodies(n);
+  logger::printTitle("Partition Profiling --Bodies");
+  for (B_iter B=bodies.begin(); B!=bodies.end(); B++) {
+    int i = B-bodies.begin();
+    B->X[0] = x[3*i+0];
+    B->X[1] = x[3*i+1];
+    B->X[2] = x[3*i+2];
+    B->SRC = q[i];
+    int iwrap = wrap(B->X, cycle);
+    B->IBODY = index[i] | (iwrap << shift);
   }
   localBounds = boundBox->getBounds(bodies);
   globalBounds = baseMPI->allreduceBounds(localBounds);
   localBounds = partition->octsection(bodies,globalBounds);
   bodies = treeMPI->commBodies(bodies);
-  for (int i=0; i<nglobal; i++) {
-    icpumap[i] = 0;
-  }
+  Cells cells = localTree->buildTree(bodies, buffer, localBounds);
+  upDownPass->upwardPass(cells);
+
   for (B_iter B=bodies.begin(); B!=bodies.end(); B++) {
-    int i = B->IBODY & mask;
+    int i = B-bodies.begin();
+    index[i] = B->IBODY & mask;
     int iwrap = unsigned(B->IBODY) >> shift;
     unwrap(B->X, cycle, iwrap);
     x[3*i+0] = B->X[0];
     x[3*i+1] = B->X[1];
     x[3*i+2] = B->X[2];
-    q[i] = B->SRC;
-    xold[3*i+0] = B->TRG[0];
-    xold[3*i+1] = B->TRG[1];
-    xold[3*i+2] = B->TRG[2];
-    icpumap[i] = 1;
+    q[i]     = B->SRC;
   }
+  n = bodies.size();
 }
 
-extern "C" void fmm_coulomb(int & nglobal, int * icpumap,
-			     double * x, double * q, double * p, double * f,
-			     double & cycle) {
-  const int shift = 29;
-  const int mask = ~(0x7U << shift);
-  int nlocal = 0;
-  for (int i=0; i<nglobal; i++) {
-    if (icpumap[i] == 1) {
-      nlocal++;
-    } else {
-      icpumap[i] = 0;
-    }
+extern "C" void FMM_Partition_NonP(int & n, int * index, double * x, double * q) {
+  logger::printTitle("Partition Profiling");
+  Bodies bodies(n);
+  //std::cout << "n:" << n << "   x[0]:" << x[0] << "   q[0]" << q[0] << std::endl;
+  for (B_iter B=bodies.begin(); B!=bodies.end(); B++) {
+    int i = B-bodies.begin();
+    B->X[0] = x[3*i+0];
+    B->X[1] = x[3*i+1];
+    B->X[2] = x[3*i+2];
+    B->SRC = q[i];
+    B->IBODY = index[i];
   }
-  args->numBodies = nlocal;
+  localBounds = boundBox->getBounds(bodies);
+  //std::cout << "localBounds Xmin[0]" << localBounds.Xmin[0] << std::endl;
+  globalBounds = baseMPI->allreduceBounds(localBounds);
+  //std::cout << "globalBounds Xmin[0]" << globalBounds.Xmin[0] << std::endl;
+  localBounds = partition->octsection(bodies,globalBounds);
+  bodies = treeMPI->commBodies(bodies);
+  Cells cells = localTree->buildTree(bodies, buffer, localBounds);
+  upDownPass->upwardPass(cells);
+
+  n = bodies.size();
+}
+
+extern "C" void FMM_Coulomb(int n, double * x, double * q, double * p, double * f, double cycle) {
+  args->numBodies = n;
   logger::printTitle("FMM Parameters");
   args->print(logger::stringLength, P);
   logger::printTitle("FMM Profiling");
   logger::startTimer("Total FMM");
   logger::startPAPI();
-  Bodies bodies(nlocal);
-  B_iter B = bodies.begin();
-  for (int i=0; i<nglobal; i++) {
-    if (icpumap[i] == 1) {
-      B->X[0] = x[3*i+0];
-      B->X[1] = x[3*i+1];
-      B->X[2] = x[3*i+2];
-      B->SRC = q[i];
-      B->TRG = 0;
-      int iwrap = wrap(B->X, cycle);
-      B->IBODY = i | (iwrap << shift);
-      B++;
-    }
+  Bodies bodies(n);
+  for (B_iter B=bodies.begin(); B!=bodies.end(); B++) {
+    int i = B-bodies.begin();
+    B->X[0] = x[3*i+0];
+    B->X[1] = x[3*i+1];
+    B->X[2] = x[3*i+2];
+    wrap(B->X, cycle);
+    B->SRC = q[i];
+    B->TRG[0] = p[i];
+    B->TRG[1] = f[3*i+0];
+    B->TRG[2] = f[3*i+1];
+    B->TRG[3] = f[3*i+2];
+    B->IBODY = i;
   }
   Cells cells = localTree->buildTree(bodies, buffer, localBounds);
   upDownPass->upwardPass(cells);
@@ -170,7 +184,7 @@ extern "C" void fmm_coulomb(int & nglobal, int * icpumap,
   } else {
     for (int irank=0; irank<baseMPI->mpisize; irank++) {
       treeMPI->getLET(jcells, (baseMPI->mpirank+irank)%baseMPI->mpisize);
-      traversal->traverse(cells, jcells, cycle, args->dual, false);
+      traversal->traverse(cells, jcells, cycle, args->dual,  false);
     }
   }
   upDownPass->downwardPass(cells);
@@ -182,61 +196,38 @@ extern "C" void fmm_coulomb(int & nglobal, int * icpumap,
   logger::stopTimer("Total FMM");
   logger::printTitle("Total runtime");
   logger::printTime("Total FMM");
-
   for (B_iter B=bodies.begin(); B!=bodies.end(); B++) {
-    int i = B->IBODY & mask;
-    p[i]     += B->TRG[0] * B->SRC * Celec;
-    f[3*i+0] += B->TRG[1] * B->SRC * Celec;
-    f[3*i+1] += B->TRG[2] * B->SRC * Celec;
-    f[3*i+2] += B->TRG[3] * B->SRC * Celec;
-  }
-  bodies = treeMPI->getRecvBodies();
-  for (B_iter B=bodies.begin(); B!=bodies.end(); B++) {
-    int i = B->IBODY & mask;
-    int iwrap = unsigned(B->IBODY) >> shift;
-    unwrap(B->X, cycle, iwrap);
-    x[3*i+0] = B->X[0];
-    x[3*i+1] = B->X[1];
-    x[3*i+2] = B->X[2];
-    q[i] = B->SRC;
-    assert(icpumap[i] == 0);
-    icpumap[i] = 2;
+    int i = B->IBODY;
+    p[i]     = B->TRG[0];
+    f[3*i+0] = B->TRG[1];
+    f[3*i+1] = B->TRG[2];
+    f[3*i+2] = B->TRG[3];
   }
 }
 
-extern "C" void ewald_coulomb(int & nglobal, int * icpumap, double * x, double * q, double * p, double * f,
-			       int & ksize, double & alpha, double & sigma, double & cutoff, double & cycle) {
+extern "C" void Ewald_Coulomb(int n, double * x, double * q, double * p, double * f,
+			      int ksize, double alpha, double sigma, double cutoff, double cycle) {
   Ewald * ewald = new Ewald(ksize, alpha, sigma, cutoff, cycle);
-  const int shift = 29;
-  const int mask = ~(0x7U << shift);
-  int nlocal = 0;
-  for (int i=0; i<nglobal; i++) {
-    if (icpumap[i] == 1) {
-      nlocal++;
-    } else {
-      icpumap[i] = 0;
-    } 
-  }
-  args->numBodies = nlocal;
+  args->numBodies = n;
   logger::printTitle("Ewald Parameters");
   args->print(logger::stringLength, P);
   ewald->print(logger::stringLength);
   logger::printTitle("Ewald Profiling");
   logger::startTimer("Total Ewald");
   logger::startPAPI();
-  Bodies bodies(nlocal);
-  B_iter B = bodies.begin();
-  for (int i=0; i<nglobal; i++) {
-    if (icpumap[i] == 1) {
-      B->X[0] = x[3*i+0];
-      B->X[1] = x[3*i+1];
-      B->X[2] = x[3*i+2];
-      B->SRC = q[i];
-      B->TRG = 0;
-      int iwrap = wrap(B->X, cycle);
-      B->IBODY = i | (iwrap << shift);
-      B++;
-    }
+  Bodies bodies(n);
+  for (B_iter B=bodies.begin(); B!=bodies.end(); B++) {
+    int i = B-bodies.begin();
+    B->X[0] = x[3*i+0];
+    B->X[1] = x[3*i+1];
+    B->X[2] = x[3*i+2];
+    wrap(B->X, cycle);
+    B->SRC = q[i];
+    B->TRG[0] = p[i];
+    B->TRG[1] = f[3*i+0];
+    B->TRG[2] = f[3*i+1];
+    B->TRG[3] = f[3*i+2];
+    B->IBODY = i;
   }
   Cells cells = localTree->buildTree(bodies, buffer, localBounds);
   Bodies jbodies = bodies;
@@ -253,223 +244,234 @@ extern "C" void ewald_coulomb(int & nglobal, int * icpumap, double * x, double *
   logger::stopTimer("Total Ewald");
   logger::printTitle("Total runtime");
   logger::printTime("Total Ewald");
-
   for (B_iter B=bodies.begin(); B!=bodies.end(); B++) {
-    int i = B->IBODY & mask;
-    p[i]     += B->TRG[0] * B->SRC * Celec;
-    f[3*i+0] += B->TRG[1] * B->SRC * Celec;
-    f[3*i+1] += B->TRG[2] * B->SRC * Celec;
-    f[3*i+2] += B->TRG[3] * B->SRC * Celec;
-  }
-  treeMPI->allgatherBounds(localBounds);
-  treeMPI->setLET(cells, cycle);
-  treeMPI->commBodies();
-  bodies = treeMPI->getRecvBodies();
-  for (B_iter B=bodies.begin(); B!=bodies.end(); B++) {
-    int i = B->IBODY & mask;
-    int iwrap = unsigned(B->IBODY) >> shift;
-    unwrap(B->X, cycle, iwrap);
-    x[3*i+0] = B->X[0];
-    x[3*i+1] = B->X[1];
-    x[3*i+2] = B->X[2];
-    q[i] = B->SRC;
-    assert(icpumap[i] == 0);
-    icpumap[i] = 2;
+    int i = B->IBODY;
+    p[i]     = B->TRG[0];
+    f[3*i+0] = B->TRG[1];
+    f[3*i+1] = B->TRG[2];
+    f[3*i+2] = B->TRG[3];
   }
   delete ewald;
 }
 
-extern "C" void direct_coulomb(int & nglobal, int * icpumap, double * x, double * q, double * p, double * f, double & cycle) {
-  logger::startTimer("Direct Coulomb");
+void MPI_Shift(double * var, int &nold, int mpisize, int mpirank) {
+  const int isend = (mpirank + 1          ) % mpisize;
+  const int irecv = (mpirank - 1 + mpisize) % mpisize;
+  //std::cout << "mpirank: " << mpirank << "   isend:" << isend << "   irecv:" << irecv << std::endl;
+  int nnew;
+  MPI_Request sreq, rreq;
+  MPI_Isend(&nold, 1, MPI_INT, irecv, 0, MPI_COMM_WORLD, &sreq);
+  MPI_Irecv(&nnew, 1, MPI_INT, isend, 0, MPI_COMM_WORLD, &rreq);
+  MPI_Wait(&sreq, MPI_STATUS_IGNORE);
+  MPI_Wait(&rreq, MPI_STATUS_IGNORE);
+  //std::cout << "buff size is " << nnew << std::endl;
+  double * buf = new double [nnew];
+  MPI_Isend(var, nold, MPI_DOUBLE, irecv, 1, MPI_COMM_WORLD, &sreq);
+  MPI_Irecv(buf, nnew, MPI_DOUBLE, isend, 1, MPI_COMM_WORLD, &rreq);
+  MPI_Wait(&sreq, MPI_STATUS_IGNORE);
+  MPI_Wait(&rreq, MPI_STATUS_IGNORE);
+  for (int i=0; i<nnew; i++) {
+    var[i] = buf[i];
+  }
+  nold = nnew;
+  delete[] buf;
+}
+
+extern "C" void Direct_Coulomb_TS(int & Nti,
+				  int & Nsi,
+				  double * xtarg,
+				  double * xsourcei,
+				  double * qtarg,
+				  double * qsourcei,
+				  double * p) {
+  //  std::cout << "damn" <<std::endl;
+  int Nt = Nti;
+  int Ns = Nsi;
+  int Ns3 = 3 * Ns;
+
+  if (baseMPI->mpirank == 0) std::cout << "--- MPI direct sum presource copy" << std::endl;
+  
+  double * xsource = new double [3*Nsi];
+  double * qsource = new double [Nsi];
+  for (int i=0; i<Nsi; i++) {
+    xsource[3*i+0] = xsourcei[3*i+0];
+    xsource[3*i+1] = xsourcei[3*i+1];
+    xsource[3*i+2] = xsourcei[3*i+2];
+    qsource[i] = qsourcei[i];
+  }
+
+  if (baseMPI->mpirank == 0) std::cout << "--- MPI direct sum ---------------" << std::endl;
+  for (int irank=0; irank<baseMPI->mpisize; irank++) {
+    if (baseMPI->mpirank == 0) std::cout << "Direct loop          : " << irank+1 << "/" << baseMPI->mpisize << std::endl;
+    MPI_Shift(xsource, Ns3, baseMPI->mpisize, baseMPI->mpirank); //Changes xsource and Ns3
+    MPI_Shift(qsource, Ns,  baseMPI->mpisize, baseMPI->mpirank); //Changes qsource and Ns
+    for (int i=0; i<Nt; i++) {
+      double pp = 0;
+      for (int j=0; j<Ns; j++) {
+	double dx = xtarg[3*i+0] - xsource[3*j+0];
+	double dy = xtarg[3*i+1] - xsource[3*j+1];
+	double dz = xtarg[3*i+2] - xsource[3*j+2];
+        double R2 = dx * dx + dy * dy + dz * dz;
+        double invR = 1 / std::sqrt(R2);
+        if (R2 == 0) invR = 0;
+        // double invR3 = qsource[j] * invR * invR * invR;
+        pp += qsource[j] * invR;
+        // fx += dx * invR3;
+        // fy += dy * invR3;
+        // fz += dz * invR3;  
+      }
+      p[i] += pp * qtarg[i];
+      // f[3*i+0] -= fx; // what the hell are these?
+      // f[3*i+1] -= fy;
+      // f[3*i+2] -= fz;
+    }
+  }
+  if (baseMPI->mpirank == 0) std::cout << "Direct loop done" <<std::endl;
+  // double localDipole[3] = {0, 0, 0};
+  // for (int i=0; i<Ni; i++) {
+  //   for (int d=0; d<3; d++) localDipole[d] += x[3*i+d] * q[i];
+  // }
+  // int N;
+  // MPI_Allreduce(&Ni, &N, 1, MPI_INT, MPI_SUM, MPI_COMM_WORLD);
+  // double globalDipole[3];
+  // MPI_Allreduce(localDipole, globalDipole, 3, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+  // double norm = 0;
+  // for (int d=0; d<3; d++) {
+  //   norm += globalDipole[d] * globalDipole[d];
+  // }
+  // double coef = 4 * M_PI / (3 * cycle * cycle * cycle);
+  // for (int i=0; i<Ni; i++) {
+  //   p[i] -= coef * norm / N / q[i];
+  //   f[3*i+0] -= coef * globalDipole[0];
+  //   f[3*i+1] -= coef * globalDipole[1];
+  //   f[3*i+2] -= coef * globalDipole[2];
+  // }
+  delete[] xsource;
+  delete[] qsource;
+}
+
+extern "C" void Direct_Coulomb_LJ_TS(int & Nti,
+				     int & Nsi,
+				     double * xtarg,
+				     double * xsourcei,
+				     double * qtarg,
+				     double * qsourcei,
+				     double * ljtarg,
+				     double * ljsourcei,
+				     double * pes,
+				     double * plj,
+				     double eps) {
+  int Nt = Nti;
+  int Ns = Nsi;
+  int Ns3 = 3 * Ns;
+
+  if (baseMPI->mpirank == 0) std::cout << "--- MPI direct sum presource copy" << std::endl;
+  
+  double * xsource = new double [3*Nsi];
+  double * qsource = new double [Nsi];
+  double * ljsource = new double [Nsi];
+  for (int i=0; i<Nsi; i++) {
+    xsource[3*i+0] = xsourcei[3*i+0];
+    xsource[3*i+1] = xsourcei[3*i+1];
+    xsource[3*i+2] = xsourcei[3*i+2];
+    qsource[i] = qsourcei[i];
+    ljsource[i] = ljsourcei[i];
+  }
+
+  if (baseMPI->mpirank == 0) std::cout << "--- MPI direct LJES sum ---------------" << std::endl;
+  for (int irank=0; irank<baseMPI->mpisize; irank++) {
+    if (baseMPI->mpirank == 0) std::cout << "Direct loop          : " << irank+1 << "/" << baseMPI->mpisize << std::endl;
+    MPI_Shift(xsource, Ns3, baseMPI->mpisize, baseMPI->mpirank); //Changes xsource and Ns3
+    MPI_Shift(qsource, Ns,  baseMPI->mpisize, baseMPI->mpirank); //Changes qsource and Ns
+    for (int i=0; i<Nt; i++) {
+      double pp = 0;
+      double lje = 0;
+      for (int j=0; j<Ns; j++) {
+	double dx = xtarg[3*i+0] - xsource[3*j+0];
+	double dy = xtarg[3*i+1] - xsource[3*j+1];
+	double dz = xtarg[3*i+2] - xsource[3*j+2];
+        double R2 = dx * dx + dy * dy + dz * dz;
+	double R = std::sqrt(dx * dx + dy * dy + dz * dz);
+        double invR = 1 / R; //std::sqrt(R2);
+	if (R2 == 0) invR = 0; //issue here of taking sqrt of 0
+	double sigma = ljtarg[i] + ljsource[j];
+	if(invR < 1/(2.5 * sigma)) {
+	  lje += 0;
+	}
+	else {
+	  double sod = sigma/R;
+          double att = 2 * sod * sod * sod * sod * sod * sod;
+	  double sodc = sigma/(2.5*sigma);
+          double attc = 2 * sodc * sodc * sodc * sodc * sodc * sodc;
+          double rep = att * att;
+          double repc = attc * attc;
+          lje +=  eps  * (rep - att - (repc- attc)); //ideally eps is pairwise too
+	}
+	pp += qsource[j] * invR;
+      }
+
+        // fx += dx * invR3;
+        // fy += dy * invR3;
+        // fz += dz * invR3;  
+      pes[i] += pp * qtarg[i];
+      plj[i] += lje;
+    }
+
+      // f[3*i+0] -= fx; // what the hell are these?
+      // f[3*i+1] -= fy;
+      // f[3*i+2] -= fz;
+  }
+  if (baseMPI->mpirank == 0) std::cout << "Direct loop done" <<std::endl;
+  delete[] xsource;
+  delete[] qsource;
+  delete[] ljsource;
+}
+
+extern "C" void Direct_Coulomb(int Ni, double * x, double * q, double * p, double * f, double cycle) {
+  
   int images = args->images;
   int prange = 0;
   for (int i=0; i<images; i++) {
     prange += int(std::pow(3.,i));
   }
-  real_t Xperiodic[3];
-  for (int i=0; i<nglobal; i++) {
-    if (icpumap[i] == 1) {
-      real_t pp = 0, fx = 0, fy = 0, fz = 0;
+  double * x2 = new double [3*Ni];
+  double * q2 = new double [Ni];
+  for (int i=0; i<Ni; i++) {
+    x2[3*i+0] = x[3*i+0];
+    x2[3*i+1] = x[3*i+1];
+    x2[3*i+2] = x[3*i+2];
+    q2[i] = q[i];
+  }
+  double Xperiodic[3];
+  int Nj = Ni, Nj3 = 3 * Ni;
+  if (baseMPI->mpirank == 0) std::cout << "--- MPI direct sum ---------------" << std::endl;
+  for (int irank=0; irank<baseMPI->mpisize; irank++) {
+    if (baseMPI->mpirank == 0) std::cout << "Direct loop          : " << irank+1 << "/" << baseMPI->mpisize << std::endl;
+    MPI_Shift(x2, Nj3, baseMPI->mpisize, baseMPI->mpirank);
+    MPI_Shift(q2, Nj,  baseMPI->mpisize, baseMPI->mpirank);
+    for (int i=0; i<Ni; i++) {
+      double pp = 0, fx = 0, fy = 0, fz = 0;
       for (int ix=-prange; ix<=prange; ix++) {
-	for (int iy=-prange; iy<=prange; iy++) {
-	  for (int iz=-prange; iz<=prange; iz++) {
-	    Xperiodic[0] = ix * cycle;
-	    Xperiodic[1] = iy * cycle;
-	    Xperiodic[2] = iz * cycle;
-	    for (int j=0; j<nglobal; j++) {
-	      vec3 dX;
-	      for (int d=0; d<3; d++) dX[d] = x[3*i+d] - x[3*j+d] - Xperiodic[d];
-	      real_t R2 = norm(dX);
-	      real_t invR = 1 / std::sqrt(R2);
-	      if (R2 == 0) invR = 0;
-	      real_t invR3 = q[j] * invR * invR * invR;
-	      pp += q[j] * invR;
-	      fx += dX[0] * invR3;
-	      fy += dX[1] * invR3;
-	      fz += dX[2] * invR3;
-	    }
-	  }
-	}
-      }
-      p[i] += pp * q[i] * Celec;
-      f[3*i+0] -= fx * q[i] * Celec;
-      f[3*i+1] -= fy * q[i] * Celec;
-      f[3*i+2] -= fz * q[i] * Celec;
-    }
-  }
-  real_t dipole[3] = {0, 0, 0};
-  for (int i=0; i<nglobal; i++) {
-    for (int d=0; d<3; d++) dipole[d] += x[3*i+d] * q[i];
-  }
-  real_t norm = 0;
-  for (int d=0; d<3; d++) {
-    norm += dipole[d] * dipole[d];
-  }
-  real_t coef = 4 * M_PI / (3 * cycle * cycle * cycle) * Celec;
-  for (int i=0; i<nglobal; i++) {
-    if (icpumap[i] == 1) {
-      p[i] -= coef * norm / nglobal;
-      f[3*i+0] -= coef * dipole[0] * q[i];
-      f[3*i+1] -= coef * dipole[1] * q[i];
-      f[3*i+2] -= coef * dipole[2] * q[i];
-    }
-  }
-  logger::stopTimer("Direct Coulomb");
-}
-
-extern "C" void coulomb_exclusion(int & nglobal, int * icpumap,
-				   double * x, double * q, double * p, double * f,
-				   double & cycle, int * numex, int * natex) {
-  logger::startTimer("Coulomb Exclusion");
-  for (int i=0, ic=0; i<nglobal; i++) {
-    if (icpumap[i] == 1) {
-      real_t pp = 0, fx = 0, fy = 0, fz = 0;
-      for (int jc=0; jc<numex[i]; jc++, ic++) {
-	int j = natex[ic]-1;
-	vec3 dX;
-	for (int d=0; d<3; d++) dX[d] = x[3*i+d] - x[3*j+d];
-        wrap(dX, cycle);
-	real_t R2 = norm(dX);
-	real_t invR = 1 / std::sqrt(R2);
-	if (R2 == 0) invR = 0;
-	real_t invR3 = q[j] * invR * invR * invR;
-	pp += q[j] * invR;
-	fx += dX[0] * invR3;
-	fy += dX[1] * invR3;
-	fz += dX[2] * invR3;
-      }
-      p[i] -= pp * q[i] * Celec;
-      f[3*i+0] += fx * q[i] * Celec; 
-      f[3*i+1] += fy * q[i] * Celec;
-      f[3*i+2] += fz * q[i] * Celec;
-    } else {
-      ic += numex[i];
-    }
-  }
-  logger::stopTimer("Coulomb Exclusion");
-}
-
-extern "C" void fmm_vanderwaals(int & nglobal, int * icpumap, int * atype,
-				 double * x, double * p, double * f,
-				 double & cuton, double & cutoff, double & cycle,
-				 int & numTypes, double * rscale, double * gscale, double * fgscale) {
-  VanDerWaals * VDW = new VanDerWaals(cuton, cutoff, cycle, numTypes, rscale, gscale, fgscale);
-  const int shift = 29;
-  const int mask = ~(0x7U << shift);
-  int nlocal = 0;
-  for (int i=0; i<nglobal; i++) {
-    if (icpumap[i] == 1) nlocal++;
-  }
-  args->numBodies = nlocal;
-  logger::printTitle("VdW Parameters");
-  args->print(logger::stringLength, P);
-  logger::printTitle("VdW Profiling");
-  logger::startTimer("Total VdW");
-  logger::startPAPI();
-  Bodies bodies(nlocal);
-  B_iter B = bodies.begin();
-  for (int i=0; i<nglobal; i++) {
-    if (icpumap[i] == 1) {
-      B->X[0] = x[3*i+0];
-      B->X[1] = x[3*i+1];
-      B->X[2] = x[3*i+2];
-      B->SRC = atype[i] - .5;
-      B->TRG = 0;
-      int iwrap = wrap(B->X, cycle);
-      B->IBODY = i | (iwrap << shift);
-      B++;
-    }
-  }
-  Cells cells = localTree->buildTree(bodies, buffer, localBounds);
-  upDownPass->upwardPass(cells);
-  treeMPI->allgatherBounds(localBounds);
-  treeMPI->setLET(cells, cycle);
-  treeMPI->commBodies();
-  treeMPI->commCells();
-  VDW->evaluate(cells, cells);
-  Cells jcells;
-  for (int irank=1; irank<baseMPI->mpisize; irank++) {
-    treeMPI->getLET(jcells,(baseMPI->mpirank+irank)%baseMPI->mpisize);
-    VDW->evaluate(cells, jcells);
-  }
-  logger::stopPAPI();
-  logger::stopTimer("Total VdW");
-  logger::printTitle("Total runtime");
-  logger::printTime("Total VdW");
-
-  for (B_iter B=bodies.begin(); B!=bodies.end(); B++) {
-    int i = B->IBODY & mask;
-    p[i]     += B->TRG[0];
-    f[3*i+0] += B->TRG[1];
-    f[3*i+1] += B->TRG[2];
-    f[3*i+2] += B->TRG[3];
-  }
-  delete VDW;
-}
-
-extern "C" void direct_vanderwaals(int & nglobal, int * icpumap, int * atype,
-				    double * x, double * p, double * f,
-				    double & cuton, double & cutoff, double & cycle,
-				    int & numTypes, double * rscale, double * gscale, double * fgscale) {
-  logger::startTimer("Direct VdW");
-  for (int i=0; i<nglobal; i++) {
-    if (icpumap[i] == 1) {
-      int atypei = atype[i]-1;
-      kreal_t pp = 0, fx = 0, fy = 0, fz = 0;
-      for (int j=0; j<nglobal; j++) {
-	vec3 dX;
-	for (int d=0; d<3; d++) dX[d] = x[3*i+d] - x[3*j+d];
-	wrap(dX, cycle);
-	real_t R2 = norm(dX);
-	if (R2 != 0) {
-	  int atypej = atype[j]-1;
-	  real_t rs = rscale[atypei*numTypes+atypej];
-	  real_t gs = gscale[atypei*numTypes+atypej];
-	  real_t fgs = fgscale[atypei*numTypes+atypej];
-	  real_t R2s = R2 * rs;
-	  real_t invR2 = 1.0 / R2s;
-	  real_t invR6 = invR2 * invR2 * invR2;
-	  real_t cuton2 = cuton * cuton;
-	  real_t cutoff2 = cutoff * cutoff;
-          if (R2 < cutoff2) {
-            real_t tmp = 0, dtmp = 0;
-            if (cuton2 < R2) {
-              real_t tmp1 = (cutoff2 - R2) / ((cutoff2-cuton2)*(cutoff2-cuton2)*(cutoff2-cuton2));
-              real_t tmp2 = tmp1 * (cutoff2 - R2) * (cutoff2 - 3 * cuton2 + 2 * R2);
-              tmp = invR6 * (invR6 - 1) * tmp2;
-              dtmp = invR6 * (invR6 - 1) * 12 * (cuton2 - R2) * tmp1
-                - 6 * invR6 * (invR6 + (invR6 - 1) * tmp2) * tmp2 / R2;
-            } else {
-              tmp = invR6 * (invR6 - 1);
-              dtmp = invR2 * invR6 * (2 * invR6 - 1);
+        for (int iy=-prange; iy<=prange; iy++) {
+          for (int iz=-prange; iz<=prange; iz++) {
+            Xperiodic[0] = ix * cycle;
+            Xperiodic[1] = iy * cycle;
+            Xperiodic[2] = iz * cycle;
+            for (int j=0; j<Nj; j++) {
+              double dx = x[3*i+0] - x2[3*j+0] - Xperiodic[0];
+              double dy = x[3*i+1] - x2[3*j+1] - Xperiodic[1];
+              double dz = x[3*i+2] - x2[3*j+2] - Xperiodic[2];
+              double R2 = dx * dx + dy * dy + dz * dz;
+              double invR = 1 / std::sqrt(R2);
+              if (R2 == 0) invR = 0;
+              double invR3 = q2[j] * invR * invR * invR;
+              pp += q2[j] * invR;
+              fx += dx * invR3;
+              fy += dy * invR3;
+              fz += dz * invR3;
             }
-            dtmp *= fgs;
-            pp += gs * tmp;
-            fx += dX[0] * dtmp;
-            fy += dX[1] * dtmp;
-            fz += dX[2] * dtmp;
           }
-	}
+        }
       }
       p[i] += pp;
       f[3*i+0] -= fx;
@@ -477,57 +479,79 @@ extern "C" void direct_vanderwaals(int & nglobal, int * icpumap, int * atype,
       f[3*i+2] -= fz;
     }
   }
-  logger::stopTimer("Direct VdW");
+  double localDipole[3] = {0, 0, 0};
+  for (int i=0; i<Ni; i++) {
+    for (int d=0; d<3; d++) localDipole[d] += x[3*i+d] * q[i];
+  }
+  int N;
+  MPI_Allreduce(&Ni, &N, 1, MPI_INT, MPI_SUM, MPI_COMM_WORLD);
+  double globalDipole[3];
+  MPI_Allreduce(localDipole, globalDipole, 3, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+  double norm = 0;
+  for (int d=0; d<3; d++) {
+    norm += globalDipole[d] * globalDipole[d];
+  }
+  double coef = 4 * M_PI / (3 * cycle * cycle * cycle);
+  for (int i=0; i<Ni; i++) {
+    p[i] -= coef * norm / N / q[i];
+    f[3*i+0] -= coef * globalDipole[0];
+    f[3*i+1] -= coef * globalDipole[1];
+    f[3*i+2] -= coef * globalDipole[2];
+  }
+  delete[] x2;
+  delete[] q2;
 }
 
-extern "C" void vanderwaals_exclusion(int & nglobal, int * icpumap, int * atype,
-				       double * x, double * p, double * f,
-				       double & cuton, double & cutoff, double & cycle,
-				       int & numTypes, double * rscale, double * gscale,
-				       double * fgscale, int * numex, int * natex) {
-  logger::startTimer("VdW Exclusion");
-  for (int i=0, ic=0; i<nglobal; i++) {
-    if (icpumap[i] == 1) {
-      int atypei = atype[i]-1;
-      for (int jc=0; jc<numex[i]; jc++, ic++) {
-	int j = natex[ic]-1;
-	vec3 dX;
-	for (int d=0; d<3; d++) dX[d] = x[3*i+d] - x[3*j+d];
-        wrap(dX, cycle);
-	real_t R2 = norm(dX);
-        if (R2 != 0) {
-          int atypej = atype[j]-1;
-          real_t rs = rscale[atypei*numTypes+atypej];
-          real_t gs = gscale[atypei*numTypes+atypej];
-          real_t fgs = fgscale[atypei*numTypes+atypej];
-          real_t R2s = R2 * rs;
-          real_t invR2 = 1.0 / R2s;
-          real_t invR6 = invR2 * invR2 * invR2;
-          real_t cuton2 = cuton * cuton;
-          real_t cutoff2 = cutoff * cutoff;
-          if (R2 < cutoff2) {
-            real_t tmp = 0, dtmp = 0;
-            if (cuton2 < R2) {
-              real_t tmp1 = (cutoff2 - R2) / ((cutoff2-cuton2)*(cutoff2-cuton2)*(cutoff2-cuton2));
-              real_t tmp2 = tmp1 * (cutoff2 - R2) * (cutoff2 - 3 * cuton2 + 2 * R2);
-              tmp = invR6 * (invR6 - 1) * tmp2;
-              dtmp = invR6 * (invR6 - 1) * 12 * (cuton2 - R2) * tmp1
-                - 6 * invR6 * (invR6 + (invR6 - 1) * tmp2) * tmp2 / R2;
-            } else {
-              tmp = invR6 * (invR6 - 1);
-              dtmp = invR2 * invR6 * (2 * invR6 - 1);
-            }
-            dtmp *= fgs;
-            p[i] -= gs * tmp;
-            f[3*i+0] += dX[0] * dtmp;
-            f[3*i+1] += dX[1] * dtmp;
-            f[3*i+2] += dX[2] * dtmp;
-          }
-        }
-      }
-    } else {
-      ic += numex[i];
-    }
+
+extern "C" void Test_Sum(int Ni, double * p, double * p2,
+			 double * q,
+			 double * f, double * f2) {
+  int mpirank = baseMPI->mpirank;
+  int stringLength = 20;
+  double potSum = 0, potSum2 = 0, accDif = 0, accNrm = 0;
+  for (int i=0; i<Ni; i++) {
+    potSum  += p[i]  * q[i];
+    potSum2 += p2[i] * q[i];
+    accDif  += (f[3*i+0] - f2[3*i+0]) * (f[3*i+0] - f2[3*i+0])
+      + (f[3*i+1] - f2[3*i+1]) * (f[3*i+1] - f2[3*i+1])
+      + (f[3*i+2] - f2[3*i+2]) * (f[3*i+2] - f2[3*i+2]);
+    accNrm  += f2[3*i+0] * f2[3*i+0] + f2[3*i+1] * f2[3*i+1] + f2[3*i+2] * f2[3*i+2];
   }
-  logger::stopTimer("VdW Exclusion");
+  double potSumGlob, potSumGlob2, accDifGlob, accNrmGlob;
+  MPI_Reduce(&potSum,  &potSumGlob,  1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);
+  MPI_Reduce(&potSum2, &potSumGlob2, 1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);
+  MPI_Reduce(&accDif,  &accDifGlob,  1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);
+  MPI_Reduce(&accNrm,  &accNrmGlob,  1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);
+  double potDifGlob = (potSumGlob - potSumGlob2) * (potSumGlob - potSumGlob2);
+  double potNrmGlob = potSumGlob * potSumGlob;
+  if (mpirank == 0) {
+    std::cout << "--- FMM vs. Ewald  ---------------" << std::endl;
+    std::cout << std::setw(stringLength) << std::left << std::scientific
+  	      << "Rel. L2 Error (pot)" << " : " << std::sqrt(potDifGlob/potNrmGlob) << std::endl;
+    std::cout << std::setw(stringLength) << std::left
+	      << "Rel. L2 Error (acc)" << " : " << std::sqrt(accDifGlob/accNrmGlob) << std::endl;
+  }
+}
+
+extern "C" void Test_Direct(int Ni, double * p, double * p2,
+			 double * q) {
+  int mpirank = get_mpirank();
+  int stringLength = 20;
+  double potSum = 0, potSum2 = 0, accDif = 0, accNrm = 0;
+  for (int i=0; i<Ni; i++) {
+    potSum  += p[i]  * q[i];
+    potSum2 += p2[i] * q[i];
+  }
+  double potSumGlob, potSumGlob2;
+  MPI_Reduce(&potSum,  &potSumGlob,  1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);
+  MPI_Reduce(&potSum2, &potSumGlob2, 1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);
+  double potDif2Glob = (potSumGlob - potSumGlob2) * (potSumGlob - potSumGlob2);
+  double potDifGlob = potSumGlob - potSumGlob2;
+  if (mpirank == 0) {
+    std::cout << "--- FMM vs. Direct  ---------------" << std::endl;
+    std::cout << std::setw(stringLength) << std::left << std::scientific
+  	      << "Error (potDiff^2)" << " : " << potDif2Glob << std::endl;
+    std::cout << std::setw(stringLength) << std::left
+	      << "Error (potDiff)" << " : " << potDifGlob << std::endl;
+  }
 }

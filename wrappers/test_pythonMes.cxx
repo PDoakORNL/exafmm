@@ -6,14 +6,14 @@
 #include <iostream>
 #include <sstream>
 
-extern "C" void fmm_init(int images);
-extern "C" void fmm_finalize();
-extern "C" void fmm_partition(int & n, int * index, double * x, double * q, double cycle);
-extern "C" void fmm_coulomb(int n, double * x, double * q, double * p, double * f, double cycle);
-extern "C" void ewald_coulomb(int n, double * x, double * q, double * p, double * f,
+extern "C" void FMM_Init(int images);
+extern "C" void FMM_Finalize();
+extern "C" void FMM_Partition(int & n, int * index, double * x, double * q, double cycle);
+extern "C" void FMM_Coulomb(int n, double * x, double * q, double * p, double * f, double cycle);
+extern "C" void Ewald_Coulomb(int n, double * x, double * q, double * p, double * f,
 			      int ksize, double alpha, double sigma, double cutoff, double cycle);
-extern "C" void direct_coulomb(int n, double * x, double * q, double * p, double * f, double cycle);
-extern "C" void direct_coulomb_TS(int & nti, int & nsi,  double * x, double * x2,
+extern "C" void Direct_Coulomb(int n, double * x, double * q, double * p, double * f, double cycle);
+extern "C" void Direct_Coulomb_TS(int & nti, int & nsi,  double * x, double * x2,
 				  double * q, double * q2, double * p);
 extern "C" void Test_Sum(int Ni, double * p, double * p2,
 			 double * q,
@@ -25,8 +25,8 @@ int main(int argc, char ** argv) {
   const int Nmax = 1000000;
   int Ni = 500;
   int stringLength = 20;
-  int images = 6;
-  int ksize = 11;
+  int images = 0;
+  int ksize = 1;
   double cycle = 2 * M_PI;
   double alpha = 10 / cycle;
   double sigma = .25 / M_PI;
@@ -76,16 +76,16 @@ int main(int argc, char ** argv) {
   file.close();
 #endif
 
-  fmm_init(images);
-  fmm_partition(Ni, index, x, q, cycle);
-  fmm_coulomb(Ni, x, q, p, f, cycle);
+  FMM_Init(images);
+  FMM_Partition(Ni, index, x, q, cycle);
+  FMM_Coulomb(Ni, x, q, p, f, cycle);
   for (int i=0; i<Ni; i++) {
     p2[i] = f2[3*i+0] = f2[3*i+1] = f2[3*i+2] = 0;
   }
 
-  ewald_coulomb(Ni, x, q, p2, f2, ksize, alpha, sigma, cutoff, cycle);
+  Ewald_Coulomb(Ni, x, q, p2, f2, ksize, alpha, sigma, cutoff, cycle);
 
-  test_sum(Ni,p, p2,
+  Test_Sum(Ni,p, p2,
 		  q,
 	   f,f2);
 
@@ -93,6 +93,15 @@ int main(int argc, char ** argv) {
     p2[i] = f2[3*i+0] = f2[3*i+1] = f2[3*i+2] = 0;
   }
 
+  Direct_Coulomb(Ni,
+		 x,
+		 q,
+		 p2,
+		 f2,
+		 cycle);
+
+  Test_Direct(Ni,p, p2,
+	      q);
   
   delete[] x;
   delete[] q;
@@ -100,6 +109,6 @@ int main(int argc, char ** argv) {
   delete[] f;
   delete[] p2;
   delete[] f2;
-  fmm_finalize();
-  mpi_finalize();
+  FMM_Finalize();
+  MPI_Finalize();
 }

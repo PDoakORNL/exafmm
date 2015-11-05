@@ -13,7 +13,7 @@ libcharmm2_a_CPPFLAGS = $(AM_CPPFLAGS) -DEXAFMM_LAPLACE -DEXAFMM_SPHERICAL -DEXA
 libpythonMes_a_SOURCES = pythonMes.cxx ../kernels/LaplaceCartesianCPU.cxx ../kernels/LaplaceP2PCPU.cxx
 libpythonMes_a_CPPFLAGS = $(AM_CPPFLAGS) -DEXAFMM_LAPLACE -DEXAFMM_CARTESIAN -DEXAFMM_EXPANSION=4
 
-bin_PROGRAMS = petiga gromacs charmm charmm2 pythonMes
+bin_PROGRAMS = petiga gromacs charmm charmm2 pythonMes testMPI
 petiga_SOURCES = test_petiga.cxx
 petiga_CPPFLAGS = $(AM_CPPFLAGS)
 petiga_LDADD = libpetiga.a
@@ -29,6 +29,9 @@ charmm2_LDADD = libcharmm2.a -lstdc++ -lgomp
 pythonMes_SOURCES = test_pythonMes.cxx
 pythonMes_CPPFLAGS = $(AM_CPPFLAGS)
 pythonMes_LDADD = libpythonMes.a -lstdc++ -lgomp
+testMPI_SOURCES = test_mpi.cxx
+testMPI_CPPFLAGS = $(AM_CPPFLAGS) -DEXAFMM_LAPLACE -DEXAFMM_CARTESIAN -DEXAFMM_EXPANSION=4
+testMPI_LDADD = -lstdc++ -lgomp 
 
 
 run_charmm: charmm
