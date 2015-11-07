@@ -103,3 +103,7 @@ wrappers/pythonMes.dSYM/
 wrappers/pythonMesSer
 wrappers/testMPI
 wrappers/testMPI.dSYM/
+<<<<<<< 21874e4f3a2b10ba6015d83ba60fcd518a81525f
+=======
+GSYMS
+>>>>>>> adding GSYMS (from gtags) to ignore
