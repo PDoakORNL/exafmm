@@ -25,7 +25,7 @@ int main(int argc, char ** argv) {
   const int Nmax = 1000000;
   int Ni = 500;
   int stringLength = 20;
-  int images = 6;
+  int images = 0;
   int ksize = 11;
   double cycle = 2 * M_PI;
   double alpha = 10 / cycle;
@@ -93,13 +93,12 @@ int main(int argc, char ** argv) {
     p2[i] = f2[3*i+0] = f2[3*i+1] = f2[3*i+2] = 0;
   }
 
-  Direct_Coulomb_TS(Ni,
-		    Ni,
-		    x,
-		    x,
-		    q,
-		    q,
-		    p2);
+  Direct_Coulomb(Ni,
+		 x,
+		 q,
+		 p2,
+		 f2,
+		 cycle);
 
   Test_Direct(Ni,p, p2,
 	      q);

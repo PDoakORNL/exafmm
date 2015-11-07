@@ -63,6 +63,10 @@ AM_CPPFLAGS += -DEXAFMM_SINGLE
 endif
 
 ### SIMD flags
+if EXAFMM_DEBUG
+#AM_CXXFLAGS += -fsanitize=address -Wconversion -Wundef
+AM_CXXFLAGS += -ftrapv -O0 -Wall -Wextra -Winit-self -Wuninitialized -Wunreachable-code $(DEBUG_CXXFLAGS)
+else
 if EXAFMM_USE_SIMD
 AM_CPPFLAGS += -DEXAFMM_USE_SIMD
 if EXAFMM_HAVE_MIC
@@ -76,6 +80,7 @@ AM_CXXFLAGS += $(SSE3_CXXFLAGS) # Use SSE3 intrinsics
 else 
 if EXAFMM_HAVE_NEON
 AM_CXXFLAGS += $(NEON_CXXFLAGS) # Use Neon intrinsics
+endif
 endif
 endif
 endif
@@ -126,11 +131,6 @@ endif
 
 if EXAFMM_ASSERT
 AM_CPPFLAGS += -DEXAFMM_ASSERT
-endif
-
-if EXAFMM_DEBUG
-#AM_CXXFLAGS += -fsanitize=address -Wconversion -Wundef
-AM_CXXFLAGS += -ftrapv -O0 -Wall -Wextra -Winit-self -Wshadow -Wuninitialized -Wunreachable-code
 endif
 
 AM_MAKEFLAGS = -s

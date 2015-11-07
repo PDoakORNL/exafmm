@@ -12,8 +12,6 @@
 #error Turn off MASS for this wrapper
 #endif
 
-using namespace exafmm;
-
 Args * args;
 BaseMPI * baseMPI;
 BoundBox * boundBox;
@@ -55,7 +53,7 @@ extern "C" void FMM_Init(int images) {
   localTree = new BuildTree(ncrit, nspawn);
   globalTree = new BuildTree(1, nspawn);
   partition = new Partition(baseMPI->mpirank, baseMPI->mpisize);
-  traversal = new Traversal(nspawn, images);
+  traversal = new Traversal(nspawn, images, eps2);
   treeMPI = new TreeMPI(baseMPI->mpirank, baseMPI->mpisize, images);
   upDownPass = new UpDownPass(theta, useRmax, useRopt);
 
@@ -64,8 +62,6 @@ extern "C" void FMM_Init(int images) {
   args->nspawn = nspawn;
   args->images = images;
   args->mutual = 0;
-  args->dual = 1;
-  args->graft = 1;
   args->verbose = 1;
   args->distribution = "external";
   args->verbose &= baseMPI->mpirank == 0;
@@ -167,25 +163,24 @@ extern "C" void FMM_Coulomb(int n, double * x, double * q, double * p, double * 
     B->IBODY = i;
   }
   Cells cells = localTree->buildTree(bodies, buffer, localBounds);
-  logger::printTitle("Tree built");
   upDownPass->upwardPass(cells);
   treeMPI->allgatherBounds(localBounds);
   treeMPI->setLET(cells, cycle);
   treeMPI->commBodies();
   treeMPI->commCells();
   traversal->initWeight(cells);
-  traversal->traverse(cells, cells, cycle, args->dual, args->mutual);
+  traversal->dualTreeTraversal(cells, cells, cycle, args->mutual);
   Cells jcells;
   if (args->graft) {
     treeMPI->linkLET();
     Bodies gbodies = treeMPI->root2body();
     jcells = globalTree->buildTree(gbodies, buffer, globalBounds);
     treeMPI->attachRoot(jcells);
-    traversal->traverse(cells, jcells, cycle, args->dual, false);
+    traversal->dualTreeTraversal(cells, jcells, cycle, false);
   } else {
     for (int irank=0; irank<baseMPI->mpisize; irank++) {
       treeMPI->getLET(jcells, (baseMPI->mpirank+irank)%baseMPI->mpisize);
-      traversal->traverse(cells, jcells, cycle, args->dual,  false);
+      traversal->dualTreeTraversal(cells, jcells, cycle, false);
     }
   }
   upDownPass->downwardPass(cells);
@@ -429,14 +424,14 @@ extern "C" void Direct_Coulomb_LJ_TS(int & Nti,
 }
 
 extern "C" void Direct_Coulomb(int Ni, double * x, double * q, double * p, double * f, double cycle) {
-  
+  const int Nmax = 1000000;
   int images = args->images;
   int prange = 0;
   for (int i=0; i<images; i++) {
     prange += int(std::pow(3.,i));
   }
-  double * x2 = new double [3*Ni];
-  double * q2 = new double [Ni];
+  double * x2 = new double [3*Nmax];
+  double * q2 = new double [Nmax];
   for (int i=0; i<Ni; i++) {
     x2[3*i+0] = x[3*i+0];
     x2[3*i+1] = x[3*i+1];

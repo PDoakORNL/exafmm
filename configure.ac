@@ -207,5 +207,6 @@ AM_CONDITIONAL(EXAFMM_HAVE_CRAY, test "$ax_cv_cxx_compiler_vendor" = "cray")
 AM_CONDITIONAL(EXAFMM_HAVE_INTEL, test "$ax_cv_cxx_compiler_vendor" = "intel")
 AM_CONDITIONAL(EXAFMM_HAVE_CLANG, test "$ax_cv_cxx_compiler_vendor" = "clang")
 AM_CONDITIONAL(EXAFMM_HAVE_GNU, test "$ax_cv_cxx_compiler_vendor" = "gnu")
+AC_SUBST(DEBUG_CXXFLAGS)
 
 AC_OUTPUT

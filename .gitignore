@@ -78,3 +78,27 @@ wrappers/charmm2.dSYM/
 wrappers/gromacs
 wrappers/petiga
 
+.ipynb_checkpoints/
+Untitled.ipynb
+examples/ewald_mpi.dSYM/
+examples/helmholtz_spherical.dSYM/
+examples/helmholtz_spherical_kernel.dSYM/
+examples/helmholtz_spherical_mpi.dSYM/
+examples/laplace_cartesian.dSYM/
+examples/laplace_cartesian_kernel.dSYM/
+examples/laplace_cartesian_mpi.dSYM/
+examples/laplace_spherical.dSYM/
+examples/laplace_spherical_kernel.dSYM/
+examples/laplace_spherical_mpi.dSYM/
+examples/tree.dSYM/
+pd/
+uniform/fmm.dSYM/
+uniform/fmm_ijhpca.dSYM/
+uniform/fmm_mpi.dSYM/
+wrappers/gromacs.dSYM/
+wrappers/petiga.dSYM/
+wrappers/pythonMes
+wrappers/pythonMes.dSYM/
+wrappers/pythonMesSer
+wrappers/testMPI
+wrappers/testMPI.dSYM/
