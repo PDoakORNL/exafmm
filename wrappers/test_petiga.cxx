@@ -8,7 +8,8 @@
 
 extern "C" void FMM_Init(double eps2, int ncrit, int threads,
                          int nb, double * xb, double * yb, double * zb, double * vb,
-                         int nv, double * xv, double * yv, double * zv, double * vv);
+                         int nv, double * xv, double * yv, double * zv, double * vv,
+			 int argc, char ** argv);
 extern "C" void FMM_Finalize();
 extern "C" void FMM_Partition(int & nb, double * xb, double * yb, double * zb, double * vb,
 			      int & nv, double * xv, double * yv, double * zv, double * vv);
@@ -36,9 +37,9 @@ void Validate(int n, double * vb, double * vd, int verbose) {
 }
 
 int main(int argc, char ** argv) {
-  const int Nmax = 10000000;
+  const int Nmax = 100000;
   const int ncrit = 16;
-  const int threads = 16;
+  const int threads = 1;
   const double eps2 = 0.0;
   double * xb = new double [Nmax];
   double * yb = new double [Nmax];
@@ -70,7 +71,7 @@ int main(int argc, char ** argv) {
     zv[i] = drand48() - .5;
   }
 
-  FMM_Init(eps2, ncrit, threads, nb, xb, yb, zb, vb, nv, xv, yv, zv, vv);
+  FMM_Init(eps2, ncrit, threads, nb, xb, yb, zb, vb, nv, xv, yv, zv, vv, argc, argv);
   FMM_Partition(nb, xb, yb, zb, vb, nv, xv, yv, zv, vv);
   FMM_BuildTree();
 

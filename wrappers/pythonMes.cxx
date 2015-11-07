@@ -42,14 +42,14 @@ extern "C" void mpi_finalize(void) {
   MPI_Finalize();
 }
 
-extern "C" void FMM_Init(int images) {
+extern "C" void FMM_Init(int images, int argc, char ** argv) {
   const int ncrit = 32;
   const int nspawn = 1000;
   const real_t eps2 = 0.0;
   const real_t theta = 0.4;
   const bool useRmax = true;
   const bool useRopt = true;
-  args = new Args;
+  args = new Args(argc, argv);
   baseMPI = new BaseMPI;
   boundBox = new BoundBox(nspawn);
   localTree = new BuildTree(ncrit, nspawn);
@@ -65,7 +65,7 @@ extern "C" void FMM_Init(int images) {
   args->images = images;
   args->mutual = 0;
   args->dual = 1;
-  args->graft = 1;
+  args->graft = 0;
   args->verbose = 1;
   args->distribution = "external";
   args->verbose &= baseMPI->mpirank == 0;

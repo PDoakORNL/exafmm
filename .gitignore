@@ -70,6 +70,7 @@ patch.git
 uniform/fmm
 uniform/fmm_ijhpca
 uniform/fmm_mpi
+uniform/Makefile.in
 wrappers/WORKSMakefile
 wrappers/charmm
 wrappers/charmm.dSYM/

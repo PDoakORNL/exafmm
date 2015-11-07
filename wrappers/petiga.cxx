@@ -45,7 +45,8 @@ void log_finalize() {
 
 extern "C" void FMM_Init(double _eps2, int ncrit, int threads,
 			 int nb, double * xb, double * yb, double * zb, double * vb,
-			 int nv, double * xv, double * yv, double * zv, double * vv) {
+			 int nv, double * xv, double * yv, double * zv, double * vv,
+			 int argc = 0, char ** argv=NULL) {
   const int nspawn = 1000;
   const int images = 0;
   const real_t theta = 0.4;
@@ -64,7 +65,7 @@ extern "C" void FMM_Init(double _eps2, int ncrit, int threads,
   traversal = new Traversal(nspawn, images);
   treeMPI = new TreeMPI(baseMPI->mpirank, baseMPI->mpisize, images);
   upDownPass = new UpDownPass(theta, useRmax, useRopt);
-  num_threads(threads);
+  num_threads(args->threads);
 
   args->ncrit = ncrit;
   args->distribution = "external";
