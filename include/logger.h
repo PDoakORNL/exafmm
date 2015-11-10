@@ -22,9 +22,9 @@
 namespace exafmm {
   //! Structure for pthread based tracer
   struct Tracer {
-    pthread_t thread;                                           //!< pthread id
-    double    begin;                                            //!< Begin timer of tracer
-    double    end;                                              //!< End timer of tracer
+    static pthread_t thread;                                           //!< pthread id
+    static double    begin;                                            //!< Begin timer of tracer
+    static double    end;                                              //!< End timer of tracer
     Tracer() {}                                                 //!< Constructor
   };
 
@@ -35,10 +35,10 @@ namespace exafmm {
     typedef std::queue<Tracer>           Tracers;               //!< Queue of tracers
     typedef std::map<pthread_t,int>      ThreadMap;             //!< Map of pthread id to thread id
 
-    Timer           beginTimer;                                 //!< Timer base value
-    Timer           timer;                                      //!< Timings of all events
-    Tracers         tracers;                                    //!< Tracers for all events
-    pthread_mutex_t mutex;                                      //!< Pthread communicator
+    static Timer           beginTimer;                                 //!< Timer base value
+    static Timer           timer;                                      //!< Timings of all events
+    static Tracers         tracers;                                    //!< Tracers for all events
+    static pthread_mutex_t mutex;                                      //!< Pthread communicator
 #if EXAFMM_USE_PAPI
     int                    PAPIEventSet = PAPI_NULL;            //!< PAPI event set
     std::vector<char*>     PAPIEventNames;                      //!< Vector of PAPI event names
@@ -46,12 +46,12 @@ namespace exafmm {
     std::vector<int64_t>   PAPIEventValues;                     //!< Vector of PAPI event values
 #endif
 
-    int stringLength = 20;                                      //!< Max length of event name
-    int decimal = 7;                                            //!< Decimal precision
-    bool verbose = false;                                       //!< Print to screen
+    static  int stringLength = 20;                                      //!< Max length of event name
+    static  int decimal = 7;                                            //!< Decimal precision
+    static bool verbose = false;                                       //!< Print to screen
 
     //! Timer function
-    double get_time() {
+    inline double get_time() {
       struct timeval tv;                                        // Time value
       gettimeofday(&tv, NULL);                                  // Get time of day in seconds and microseconds
       return double(tv.tv_sec+tv.tv_usec*1e-6);                 // Combine seconds and microseconds and return
@@ -103,7 +103,7 @@ namespace exafmm {
     }
 
     //! Stop timer for given event
-    double stopTimer(std::string event, int print=1) {
+    inline double stopTimer(std::string event, int print=1) {
       double endTimer = get_time();                             // Get time of day and store in endTimer
       timer[event] += endTimer - beginTimer[event];             // Accumulate event time to timer
       if (verbose && print) printTime(event);                   // Print event and timer to screen
