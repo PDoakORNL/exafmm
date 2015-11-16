@@ -85,6 +85,7 @@ namespace exafmm {
     int      IRANK;                                             //!< Initial rank numbering for partitioning back
     uint64_t ICELL;                                             //!< Cell index   
     real_t   WEIGHT;                                            //!< Weight for partitioning
+    int      ABODY;                                             //!< Super entity membership index
 #if EXAFMM_LAPLACE
     kvec4    TRG;                                               //!< Scalar+vector3 target values
 #elif EXAFMM_HELMHOLTZ
