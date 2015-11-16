@@ -145,12 +145,8 @@ namespace exafmm {
 	int c = getopt(argc, argv, "c:d:DgGhi:jmn:or:s:t:T:vwx");
 #else
 	int option_index;
-<<<<<<< 0f0ae088c6e513d887e393eea386bd4c56df071c
-	int c = getopt_long(argc, argv, "c:d:DgGhi:jmn:or:s:t:T:vwx", long_options, &option_index);
-#endif
-=======
 	int c = getopt_long(argc, argv, "c:d:DfgGhi:jmn:or:s:t:T:vwx", long_options, &option_index);
->>>>>>> my full sum back in and toward a sane .gitignore
+#endif
 	if (c == -1) break;
 	switch (c) {
 	case 'c':
