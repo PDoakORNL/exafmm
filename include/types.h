@@ -38,7 +38,7 @@ namespace exafmm {
 #else
   typedef real_t kreal_t;                                       //!< Floating point type
   typedef complex_t kcomplex_t;                                 //!< Complex type with Kahan summation
-  typedef vec<4,real_t> kvec4;                                  //!< Vector of 4 floats types
+  typedef vec<4,real_t> kvec4;
   typedef vec<4,complex_t> kcvec4;                              //!< Vector of 4 complex types
   typedef simdvec ksimdvec;                                     //!< SIMD vector type
 #endif
@@ -77,6 +77,7 @@ namespace exafmm {
 #elif EXAFMM_HELMHOLTZ
     complex_t SRC;                                              //!< Scalar source values
 #endif
+  Source() : X(0.0) {}
   } __attribute__((aligned (16)));
 
   //! Structure of bodies
@@ -91,6 +92,7 @@ namespace exafmm {
 #elif EXAFMM_HELMHOLTZ
     kcvec4   TRG;                                               //!< Scalar+vector3 target values
 #endif
+  Body() : IBODY(0) {}
   };
 #if _SX
   typedef std::vector<Body> Bodies;                             //!< Vector of bodies

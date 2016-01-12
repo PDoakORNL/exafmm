@@ -28,6 +28,9 @@ namespace exafmm {
     vec(const vec &v) {                                         // Copy constructor (vector)
       for (int i=0; i<N; i++) data[i] = v[i];
     }
+    vec(std::initializer_list<T> v) {
+	std::copy(v.begin(), v.end(), data);
+    }
     ~vec(){}                                                    // Destructor
     const vec &operator=(const T v) {                           // Scalar assignment
       for (int i=0; i<N; i++) data[i] = v;
@@ -226,6 +229,20 @@ namespace exafmm {
 	}
 	if(v[i] >  w / 2) {
 	  v[i] -= w;
+	  iw |= 1 << i;
+	}
+      }
+      return iw;
+    }
+    friend int wrap(vec & v, const vec & w) {                     // Wrap around periodic boundary
+      int iw = 0;
+      for (int i=0; i<N; i++) {
+	if(v[i] < -w[i] / 2) {
+	  v[i] += w[i];
+	  iw |= 1 << i;
+	}
+	if(v[i] >  w[i] / 2) {
+	  v[i] -= w[i];
 	  iw |= 1 << i;
 	}
       }

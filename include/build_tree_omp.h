@@ -198,7 +198,7 @@ namespace exafmm {
     }
 
     void printTreeData(Cells & cells) {
-      if (logger::verbose && !cells.empty()) {                  // If verbose flag is true
+	//if (logger::verbose && !cells.empty()) {                  // If verbose flag is true
 	logger::printTitle("Tree stats");                       //  Print title
 	std::cout  << std::setw(logger::stringLength) << std::left// Set format
 		   << "Bodies"     << " : " << cells.front().NBODY << std::endl// Print number of bodies
@@ -206,8 +206,8 @@ namespace exafmm {
 		   << "Cells"      << " : " << cells.size() << std::endl// Print number of cells
 		   << std::setw(logger::stringLength) << std::left// Set format
 		   << "Tree depth" << " : " << numLevels << std::endl;//  Print number of levels
-      }                                                         // End if for verbose flag
-    }
+    }                                                         // End if for verbose flag
+    //}
   };
 }
 #endif
