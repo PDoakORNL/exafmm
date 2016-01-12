@@ -43,7 +43,7 @@ void log_finalize() {
   logger::printTime("Total FMM");
 }
 
-extern "C" void FMM_Init(double _eps2, int ncrit, int threads,
+extern "C" void FMM_Init(double eps2, double kreal, double kimag, int ncrit, int threads,
 			 int nb, double * xb, double * yb, double * zb, double * vb,
 			 int nv, double * xv, double * yv, double * zv, double * vv,
 			 int argc = 0, char ** argv=NULL) {
@@ -53,7 +53,10 @@ extern "C" void FMM_Init(double _eps2, int ncrit, int threads,
   const bool useRmax = true;
   const bool useRopt = true;
   const bool verbose = false;
-  kernel::eps2 = _eps2;
+  kernel::eps2 = eps2;
+#if EXAFMM_HELMHOLTZ
+  kernel::wavek = complex_t(kreal, kimag);
+#endif
   kernel::setup();
 
   args = new Args;
@@ -69,7 +72,7 @@ extern "C" void FMM_Init(double _eps2, int ncrit, int threads,
 
   args->ncrit = ncrit;
   args->distribution = "external";
-  args->dual = 1;
+  args->dual = 0;
   args->graft = 1;
   args->images = images;
   args->mutual = 0;
@@ -131,7 +134,11 @@ extern "C" void FMM_Partition(int & nb, double * xb, double * yb, double * zb, d
     xb[i] = B->X[0];
     yb[i] = B->X[1];
     zb[i] = B->X[2];
+#if EXAFMM_HELMHOLTZ
+    vb[i] = std::real(B->SRC);
+#else
     vb[i] = B->SRC;
+#endif
     B->IBODY = i;
   }
   nv = vbodies.size();
@@ -140,7 +147,11 @@ extern "C" void FMM_Partition(int & nb, double * xb, double * yb, double * zb, d
     xv[i] = B->X[0];
     yv[i] = B->X[1];
     zv[i] = B->X[2];
+#if EXAFMM_HELMHOLTZ
+    vv[i] = std::real(B->SRC);
+#else
     vv[i] = B->SRC;
+#endif
     B->IBODY = i;
   }
 }
@@ -167,22 +178,28 @@ extern "C" void FMM_B2B(double * vi, double * vb, bool verbose) {
   traversal->initListCount(bcells);
   traversal->initWeight(bcells);
   traversal->traverse(bcells, jcells, cycle, args->dual, args->mutual);
-  if (args->graft) {
-    treeMPI->linkLET();
-    Bodies gbodies = treeMPI->root2body();
-    jcells = globalTree->buildTree(gbodies, buffer, globalBounds);
-    treeMPI->attachRoot(jcells);
-    traversal->traverse(bcells, jcells, cycle, args->dual, false);
-  } else {
-    for (int irank=0; irank<baseMPI->mpisize; irank++) {
-      treeMPI->getLET(jcells, (baseMPI->mpirank+irank)%baseMPI->mpisize);
+  if (baseMPI->mpisize > 1) {
+    if (args->graft) {
+      treeMPI->linkLET();
+      Bodies gbodies = treeMPI->root2body();
+      jcells = globalTree->buildTree(gbodies, buffer, globalBounds);
+      treeMPI->attachRoot(jcells);
       traversal->traverse(bcells, jcells, cycle, args->dual, false);
+    } else {
+      for (int irank=0; irank<baseMPI->mpisize; irank++) {
+	treeMPI->getLET(jcells, (baseMPI->mpirank+irank)%baseMPI->mpisize);
+	traversal->traverse(bcells, jcells, cycle, args->dual, false);
+      }
     }
   }
   upDownPass->downwardPass(bcells);
   log_finalize();
   for (B_iter B=bbodies.begin(); B!=bbodies.end(); B++) {
+#if EXAFMM_HELMHOLTZ
+    vi[B->IBODY] += std::real(B->TRG[0]);
+#else
     vi[B->IBODY] += B->TRG[0];
+#endif
   }
 }
 
@@ -205,23 +222,29 @@ extern "C" void FMM_V2B(double * vb, double * vv, bool verbose) {
   traversal->initListCount(bcells);
   traversal->initWeight(bcells);
   traversal->traverse(bcells, vcells, cycle, args->dual, args->mutual);
-  if (args->graft) {
-    treeMPI->linkLET();
-    Bodies gbodies = treeMPI->root2body();
-    Cells jcells = globalTree->buildTree(gbodies, buffer, globalBounds);
-    treeMPI->attachRoot(jcells);
-    traversal->traverse(bcells, jcells, cycle, args->dual, false);
-  } else {
-    for (int irank=0; irank<baseMPI->mpisize; irank++) {
-      Cells jcells;
-      treeMPI->getLET(jcells, (baseMPI->mpirank+irank)%baseMPI->mpisize);
+  if (baseMPI->mpisize > 1) {
+    if (args->graft) {
+      treeMPI->linkLET();
+      Bodies gbodies = treeMPI->root2body();
+      Cells jcells = globalTree->buildTree(gbodies, buffer, globalBounds);
+      treeMPI->attachRoot(jcells);
       traversal->traverse(bcells, jcells, cycle, args->dual, false);
+    } else {
+      for (int irank=0; irank<baseMPI->mpisize; irank++) {
+	Cells jcells;
+	treeMPI->getLET(jcells, (baseMPI->mpirank+irank)%baseMPI->mpisize);
+	traversal->traverse(bcells, jcells, cycle, args->dual, false);
+      }
     }
   }
   upDownPass->downwardPass(bcells);
   log_finalize();
   for (B_iter B=bbodies.begin(); B!=bbodies.end(); B++) {
+#if EXAFMM_HELMHOLTZ
+    vb[B->IBODY] += std::real(B->TRG[0]);
+#else
     vb[B->IBODY] += B->TRG[0];
+#endif
   }
 }
 
@@ -244,23 +267,29 @@ extern "C" void FMM_B2V(double * vv, double * vb, bool verbose) {
   traversal->initListCount(vcells);
   traversal->initWeight(vcells);
   traversal->traverse(vcells, bcells, cycle, args->dual, args->mutual);
-  if (args->graft) {
-    treeMPI->linkLET();
-    Bodies gbodies = treeMPI->root2body();
-    Cells jcells = globalTree->buildTree(gbodies, buffer, globalBounds);
-    treeMPI->attachRoot(jcells);
-    traversal->traverse(vcells, jcells, cycle, args->dual, false);
-  } else {
-    for (int irank=0; irank<baseMPI->mpisize; irank++) {
-      Cells jcells;
-      treeMPI->getLET(jcells, (baseMPI->mpirank+irank)%baseMPI->mpisize);
+  if (baseMPI->mpisize > 1) {
+    if (args->graft) {
+      treeMPI->linkLET();
+      Bodies gbodies = treeMPI->root2body();
+      Cells jcells = globalTree->buildTree(gbodies, buffer, globalBounds);
+      treeMPI->attachRoot(jcells);
       traversal->traverse(vcells, jcells, cycle, args->dual, false);
+    } else {
+      for (int irank=0; irank<baseMPI->mpisize; irank++) {
+	Cells jcells;
+	treeMPI->getLET(jcells, (baseMPI->mpirank+irank)%baseMPI->mpisize);
+	traversal->traverse(vcells, jcells, cycle, args->dual, false);
+      }
     }
   }
   upDownPass->downwardPass(vcells);
   log_finalize();
   for (B_iter B=vbodies.begin(); B!=vbodies.end(); B++) {
+#if EXAFMM_HELMHOLTZ
+    vv[B->IBODY] += std::real(B->TRG[0]);
+#else
     vv[B->IBODY] += B->TRG[0];
+#endif
   }
 }
 
@@ -279,22 +308,28 @@ extern "C" void FMM_V2V(double * vi, double * vv, bool verbose) {
   traversal->initListCount(vcells);
   traversal->initWeight(vcells);
   traversal->traverse(vcells, jcells, cycle, args->dual, args->mutual);
-  if (args->graft) {
-    treeMPI->linkLET();
-    Bodies gbodies = treeMPI->root2body();
-    jcells = globalTree->buildTree(gbodies, buffer, globalBounds);
-    treeMPI->attachRoot(jcells);
-    traversal->traverse(vcells, jcells, cycle, args->dual, false);
-  } else {
-    for (int irank=0; irank<baseMPI->mpisize; irank++) {
-      treeMPI->getLET(jcells, (baseMPI->mpirank+irank)%baseMPI->mpisize);
+  if (baseMPI->mpisize > 1) {
+    if (args->graft) {
+      treeMPI->linkLET();
+      Bodies gbodies = treeMPI->root2body();
+      jcells = globalTree->buildTree(gbodies, buffer, globalBounds);
+      treeMPI->attachRoot(jcells);
       traversal->traverse(vcells, jcells, cycle, args->dual, false);
+    } else {
+      for (int irank=0; irank<baseMPI->mpisize; irank++) {
+	treeMPI->getLET(jcells, (baseMPI->mpirank+irank)%baseMPI->mpisize);
+	traversal->traverse(vcells, jcells, cycle, args->dual, false);
+      }
     }
   }
   upDownPass->downwardPass(vcells);
   log_finalize();
   for (B_iter B=vbodies.begin(); B!=vbodies.end(); B++) {
+#if EXAFMM_HELMHOLTZ
+    vi[B->IBODY] += std::real(B->TRG[0]);
+#else
     vi[B->IBODY] += B->TRG[0];
+#endif
   }
 }
 
@@ -324,6 +359,10 @@ extern "C" void Direct(int ni, double * xi, double * yi, double * zi, double * v
   }
   for (B_iter B=bodies.begin(); B!=bodies.end(); B++) {
     int i = B-bodies.begin();
+#if EXAFMM_HELMHOLTZ
+    vi[i] += std::real(B->TRG[0]);
+#else
     vi[i] += B->TRG[0];
+#endif
   }
 }

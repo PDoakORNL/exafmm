@@ -9,9 +9,9 @@
 #include "up_down_pass.h"
 #include "verify.h"
 #if EXAFMM_SERIAL
-#include "serialfmm.h"
+#include "../uniform/serialfmm.h"
 #else
-#include "parallelfmm.h"
+#include "../uniform/parallelfmm.h"
 #endif
 using namespace exafmm;
 
@@ -23,6 +23,8 @@ int main(int argc, char ** argv) {
   const real_t cutoff = 20;
 
   Args args(argc, argv);
+  args.ncrit = 32;
+  args.images = 1;
   BaseMPI baseMPI;
   BoundBox boundBox(args.nspawn);
   BuildTree buildTree(args.ncrit, args.nspawn);
@@ -37,9 +39,7 @@ int main(int argc, char ** argv) {
 #endif
   TreeMPI treeMPI(FMM.MPIRANK, FMM.MPISIZE, args.images);
 
-#ifdef EXAFMM_IJHPCA
-  //args.numBodies /= FMM.MPISIZE;
-#endif
+  args.numBodies /= FMM.MPISIZE;
   const int numBodies = args.numBodies;
   const int ncrit = 100;
   const int maxLevel = numBodies >= ncrit ? 1 + int(log(numBodies / ncrit)/M_LN2/3) : 0;
@@ -122,6 +122,7 @@ int main(int argc, char ** argv) {
 #endif
   
     FMM.downwardPass();
+    /*
     logger::stopTimer("Total FMM", 0);
 
     Bodies bodies(FMM.numBodies);
@@ -195,6 +196,7 @@ int main(int argc, char ** argv) {
     verify.print("Rel. L2 Error (acc)",std::sqrt(accDifGlob/accNrmGlob));
 #endif
 #endif
+    */
   }
   FMM.deallocate();
 

@@ -1,20 +1,28 @@
 ### Base flags
-AM_CPPFLAGS = -I../vectorclass -I../include -I../uniform
+AM_CPPFLAGS = -I../include
 if EXAFMM_HAVE_BG
 AM_CXXFLAGS = -qarch=qp -qtune=qp -O3 -qhot
 AM_FCFLAGS = -qarch=qp -qtune=qp -O3 -qhot
 else
 if EXAFMM_HAVE_FX
 AM_CXXFLAGS = -Kfast,openmp
-AM_FCFLAGS = -Kfast,openmp
+AM_FCFLAGS = -Kfast,openmp -f w
 else
 if EXAFMM_HAVE_SX
-AM_CXXFLAGS = -Nacct
-AM_FCFLAGS = -Nacct
+AM_CXXFLAGS = -Caopt -Nacct
+AM_FCFLAGS = -Caopt -Nacct
 else
 if EXAFMM_HAVE_CRAY
-AM_CXXFLAGS = -dynamic -fabi-version=6
+AM_CXXFLAGS = -dynamic
 AM_FCFLAGS = -dynamic
+if EXAFMM_HAVE_GNU
+AM_CXXFLAGS += -ffast-math -funroll-loops -fabi-version=6
+AM_FCFLAGS += -ffast-math -funroll-loops
+endif
+if EXAFMM_HAVE_INTEL
+AM_CXXFLAGS += -ansi_alias -fabi-version=6
+AM_FCFLAGS += -ansi_alias
+endif
 else
 if EXAFMM_HAVE_INTEL
 AM_CXXFLAGS = -ansi_alias -fabi-version=6
@@ -130,7 +138,7 @@ AM_CPPFLAGS += -DEXAFMM_COUNT_LIST
 endif
 
 if EXAFMM_ASSERT
-AM_CPPFLAGS += -DEXAFMM_ASSERT
+AM_CPPFLAGS += -DNDEBUG
 endif
 
 AM_MAKEFLAGS = -s

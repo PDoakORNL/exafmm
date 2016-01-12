@@ -10,9 +10,9 @@
 #include "up_down_pass.h"
 #include "van_der_waals.h"
 #if EXAFMM_SERIAL
-#include "serialfmm.h"
+#include "../uniform/serialfmm.h"
 #else
-#include "parallelfmm.h"
+#include "../uniform/parallelfmm.h"
 #endif
 #if EXAFMM_MASS
 #error Turn off EXAFMM_MASS for this wrapper
@@ -283,16 +283,18 @@ extern "C" void fmm_coulomb_(int & nglobal, int * icpumap,
   traversal->initWeight(cells);
   traversal->traverse(cells, cells, cycle, args->dual, args->mutual);
   Cells jcells;
-  if (args->graft) {
-    treeMPI->linkLET();
-    Bodies gbodies = treeMPI->root2body();
-    jcells = globalTree->buildTree(gbodies, buffer, globalBounds);
-    treeMPI->attachRoot(jcells);
-    traversal->traverse(cells, jcells, cycle, args->dual, false);
-  } else {
-    for (int irank=0; irank<baseMPI->mpisize; irank++) {
-      treeMPI->getLET(jcells, (baseMPI->mpirank+irank)%baseMPI->mpisize);
+  if (baseMPI->mpisize > 1) {
+    if (args->graft) {
+      treeMPI->linkLET();
+      Bodies gbodies = treeMPI->root2body();
+      jcells = globalTree->buildTree(gbodies, buffer, globalBounds);
+      treeMPI->attachRoot(jcells);
       traversal->traverse(cells, jcells, cycle, args->dual, false);
+    } else {
+      for (int irank=0; irank<baseMPI->mpisize; irank++) {
+	treeMPI->getLET(jcells, (baseMPI->mpirank+irank)%baseMPI->mpisize);
+	traversal->traverse(cells, jcells, cycle, args->dual, false);
+      }
     }
   }
   upDownPass->downwardPass(cells);

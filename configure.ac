@@ -85,6 +85,7 @@ if test "$have_sse3" = "yes"; then
    if test "$PRECISION" != "d" -a "$PRECISION" != "s"; then
       AC_MSG_ERROR([SSE3 requires single or double precision])
    fi
+   SSE3_CXXFLAGS=-msse3
 fi
 AM_CONDITIONAL(EXAFMM_HAVE_SSE3, test "$have_sse3" = "yes")
 AC_SUBST(SSE3_CXXFLAGS)
@@ -96,6 +97,7 @@ if test "$have_avx" = "yes"; then
    if test "$PRECISION" != "d" -a "$PRECISION" != "s"; then
       AC_MSG_ERROR([AVX requires single or double precision])
    fi
+   AVX_CXXFLAGS=-mavx
 fi
 AM_CONDITIONAL(EXAFMM_HAVE_AVX, test "$have_avx" = "yes")
 AC_SUBST(AVX_CXXFLAGS)
@@ -107,6 +109,7 @@ if test "$have_mic" = "yes"; then
    if test "$PRECISION" != "d" -a "$PRECISION" != "s"; then
       AC_MSG_ERROR([MIC requires single or double precision])
    fi
+   MIC_CXXFLAGS=-mmic
 fi
 AM_CONDITIONAL(EXAFMM_HAVE_MIC, test "$have_mic" = "yes")
 AC_SUBST(MIC_CXXFLAGS)
@@ -119,6 +122,7 @@ if test "$have_neon" = "yes"; then
    if test "$PRECISION" != "s"; then
       AC_MSG_ERROR([NEON requires single precision])
    fi
+   NEON_CXXFLAGS=-mneon
 fi
 AM_CONDITIONAL(EXAFMM_HAVE_NEON, test "$have_neon" = "yes")
 AC_SUBST(NEON_CXXFLAGS)
@@ -203,7 +207,7 @@ AC_MSG_NOTICE([Vendor : $ax_cv_cxx_compiler_vendor])
 AM_CONDITIONAL(EXAFMM_HAVE_BG, test "$ax_cv_cxx_compiler_vendor" = "ibm")
 AM_CONDITIONAL(EXAFMM_HAVE_FX, test "$ax_cv_cxx_compiler_vendor" = "fujitsu")
 AM_CONDITIONAL(EXAFMM_HAVE_SX, test "$ax_cv_cxx_compiler_vendor" = "nec")
-AM_CONDITIONAL(EXAFMM_HAVE_CRAY, test "$ax_cv_cxx_compiler_vendor" = "cray")
+AM_CONDITIONAL(EXAFMM_HAVE_CRAY, test "$CXX" = "CC")
 AM_CONDITIONAL(EXAFMM_HAVE_INTEL, test "$ax_cv_cxx_compiler_vendor" = "intel")
 AM_CONDITIONAL(EXAFMM_HAVE_CLANG, test "$ax_cv_cxx_compiler_vendor" = "clang")
 AM_CONDITIONAL(EXAFMM_HAVE_GNU, test "$ax_cv_cxx_compiler_vendor" = "gnu")

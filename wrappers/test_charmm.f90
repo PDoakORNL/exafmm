@@ -524,7 +524,7 @@ contains
     call mpi_comm_rank(mpi_comm_world,mpirank,ierr)
     if(mpirank == 0)then
        open(unit=1,file='water.pdb',status='unknown')
-       open(unit=2,file='uniform.dat',status='unknown')
+       open(unit=2,file='verify.dat',status='unknown')
     endif
 
     tstep = 0.001/timfac !ps -> akma
@@ -745,7 +745,7 @@ program main
   call mpi_comm_rank(mpi_comm_world,mpirank,ierr)
   nglobal = 1000
   images = 3
-  theta = 0.4
+  theta = 0.3
   verbose = 0
   ksize = 11
   pcycle = 10 * pi
@@ -840,6 +840,7 @@ program main
   if(mpirank == 0) print*,'Coulomb exclusion'
   call coulomb_exclusion(nglobal,icpumap,x,q,p,f,pcycle,numex,natex)
   call coulomb_exclusion(nglobal,icpumap,x,q,p2,f2,pcycle,numex,natex)
+
 
   call verify(nglobal,icpumap,p,p2,f,f2,pl2err,fl2err,enerf,enere,grmsf,grmse)
   if (mpirank == 0) then
