@@ -1,8 +1,9 @@
-#ifndef types_h
+ #ifndef types_h
 #define types_h
 #ifndef _SX
 #include "align.h"
 #endif
+#include <cassert>
 #include <complex>
 #include "kahan.h"
 #include "macros.h"
@@ -22,6 +23,7 @@ namespace exafmm {
   typedef std::complex<real_t> complex_t;                       //!< Complex type
   typedef vec<3,int> ivec3;                                     //!< Vector of 3 int types
   typedef vec<3,real_t> vec3;                                   //!< Vector of 3 real_t types
+  typedef vec<4,real_t> vec4;                                   //!< Vector of 4 real_t types
   typedef vec<3,complex_t> cvec3;                               //!< Vector of 3 complex_t types
 
   // SIMD vector types for MIC, AVX, and SSE
@@ -53,6 +55,8 @@ namespace exafmm {
   const int NTERM = P*(P+1)/2;                                  //!< Number of multipole/local terms
 #elif EXAFMM_HELMHOLTZ
   const int NTERM = P*P;                                        //!< Number of multipole/local terms
+#elif EXAFMM_BIOTSAVART
+  const int NTERM = 3*P*(P+1)/2;                                //!< Number of terms for Biot-Savart
 #endif
   typedef vec<NTERM,complex_t> vecP;                            //!< Multipole/local coefficient type
 #endif
@@ -76,6 +80,8 @@ namespace exafmm {
     real_t    SRC;                                              //!< Scalar source values
 #elif EXAFMM_HELMHOLTZ
     complex_t SRC;                                              //!< Scalar source values
+#elif EXAFMM_BIOTSAVART
+    vec4      SRC;        
 #endif
   } __attribute__((aligned (16)));
 
@@ -86,7 +92,7 @@ namespace exafmm {
     uint64_t ICELL;                                             //!< Cell index   
     real_t   WEIGHT;                                            //!< Weight for partitioning
     int      ABODY;                                             //!< Super entity membership index
-#if EXAFMM_LAPLACE
+#if EXAFMM_LAPLACE | EXAFMM_BIOTSAVART
     kvec4    TRG;                                               //!< Scalar+vector3 target values
 #elif EXAFMM_HELMHOLTZ
     kcvec4   TRG;                                               //!< Scalar+vector3 target values
